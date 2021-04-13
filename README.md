@@ -15,3 +15,4 @@ simple but functional implementation of a http-server in vanilla java
  - [maven gitignore](https://github.com/github/gitignore/blob/master/Maven.gitignore)
  - [docker github actions setup](https://github.com/marketplace/actions/build-and-push-docker-images)
  - [switch to multi stage build](https://stackoverflow.com/questions/61388905/github-action-to-maven-build-followed-by-docker-build-push)
+ - [Sonarcloud](https://github.com/marketplace/actions/sonarcloud-scan)
