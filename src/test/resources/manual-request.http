@@ -1,0 +1,3 @@
+GET localhost:8080/
+
+HEAD localhost:8080/index.html
