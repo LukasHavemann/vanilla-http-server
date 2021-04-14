@@ -1,9 +1,16 @@
 package de.havemann.lukas.vanillahttpserver;
 
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+
+@SpringBootApplication
 public class VanillaHttpServer {
 
     public static void main(String[] args) {
-        System.out.println("hello world!");
+        new SpringApplicationBuilder(VanillaHttpServer.class)
+                .web(WebApplicationType.NONE)
+                .run(args);
     }
 }
 
