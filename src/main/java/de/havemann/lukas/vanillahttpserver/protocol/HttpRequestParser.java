@@ -8,7 +8,7 @@ import java.util.StringTokenizer;
 public class HttpRequestParser {
 
     public static final String HTTP_LINE_DELIMITER = "\r\n";
-    public static final String HTTP_HEADER_FIELD_SEPERATOR = ": ";
+    public static final String HTTP_HEADER_FIELD_SEPARATOR = ": ";
 
     private final StringTokenizer tokenizer;
     private final HttpRequest.Builder requestBuilder = new HttpRequest.Builder();
@@ -72,7 +72,7 @@ public class HttpRequestParser {
 
     private void parseHttpProtocol(StringTokenizer statusLineTokens) {
         if (!statusLineTokens.hasMoreTokens()) {
-            throw new HttpParsingException(HttpParsingException.Reason.NO_HTTP_PROTOCOL_FOUND);
+            throw new HttpParsingException(HttpParsingException.Reason.HTTP_PROTOCOL_EXPECTED);
         }
 
         final String currentToken = statusLineTokens.nextToken();
@@ -97,13 +97,13 @@ public class HttpRequestParser {
     }
 
     private void parseSingleHttpHeaderField(String httpHeaderField) {
-        int seperator = httpHeaderField.indexOf(HTTP_HEADER_FIELD_SEPERATOR);
-        if (seperator == -1) {
+        int separator = httpHeaderField.indexOf(HTTP_HEADER_FIELD_SEPARATOR);
+        if (separator == -1) {
             throw new HttpParsingException(HttpParsingException.Reason.INVALID_HTTP_HEADER_FIELD, httpHeaderField);
         }
 
         requestBuilder.addHttpHeader(
-                httpHeaderField.substring(0, seperator),
-                httpHeaderField.substring(seperator + HTTP_HEADER_FIELD_SEPERATOR.length()));
+                httpHeaderField.substring(0, separator),
+                httpHeaderField.substring(separator + HTTP_HEADER_FIELD_SEPARATOR.length()));
     }
 }

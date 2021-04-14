@@ -41,17 +41,20 @@ public class HttpParsingException extends RuntimeException {
     }
 
     /**
-     * @return token, on which the parsing failed
+     * @return token, on which the parsing process failed
      */
     public String getErrorToken() {
         return errorToken;
     }
 
+    /**
+     * Identifies the different parsing errors
+     */
     public enum Reason {
         EMPTY_STATUS_LINE,
         UNSUPPORTED_HTTP_METHOD,
         URI_EXPECTED,
-        NO_HTTP_PROTOCOL_FOUND,
+        HTTP_PROTOCOL_EXPECTED,
         UNSUPPORTED_HTTP_PROTOCOL,
         INVALID_HTTP_HEADER_FIELD
     }

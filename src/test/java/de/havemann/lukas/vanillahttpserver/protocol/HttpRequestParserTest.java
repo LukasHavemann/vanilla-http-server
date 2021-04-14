@@ -3,9 +3,9 @@ package de.havemann.lukas.vanillahttpserver.protocol;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Optional;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 public class HttpRequestParserTest {
 
@@ -18,20 +18,21 @@ public class HttpRequestParserTest {
             "Accept-Encoding: gzip,deflate");
 
     private static final String EXAMPLE_HEAD_REQUEST = String.join("\r\n",
-            "HEAD /echo/head/json HTTP/1.1",
+            "HEAD /test/head HTTP/1.1",
             "Accept: application/json",
-            "Host: reqbin.com");
+            "Host: adobe.com");
 
     @Test
     public void parseGetRequestTest() {
         final HttpRequest actual = new HttpRequestParser(EXAMPLE_GET_REQUEST).parse();
 
         final SoftAssertions softly = new SoftAssertions();
+
         softly.assertThat(actual.getHttpMethod()).isEqualTo(HttpMethod.GET);
         softly.assertThat(actual.getHttpProtocol()).isEqualTo(HttpProtocol.HTTP_1_1);
         softly.assertThat(actual.getUri()).isEqualTo("/");
         softly.assertThat(actual.getHttpHeaders()).containsKey("Content-Type").hasSize(5);
-        softly.assertThat(actual.getHttpHeaders().get("Connection")).isEqualTo("Keep-Alive");
+        softly.assertThat(actual.getHeaderValueOf(HttpHeaderField.CONNECTION)).isEqualTo(Optional.of("Keep-Alive"));
         softly.assertThat(actual.getMessageBody()).isEmpty();
 
         softly.assertAll();
@@ -42,11 +43,36 @@ public class HttpRequestParserTest {
         final HttpRequest actual = new HttpRequestParser(EXAMPLE_HEAD_REQUEST).parse();
 
         final SoftAssertions softly = new SoftAssertions();
+
         softly.assertThat(actual.getHttpMethod()).isEqualTo(HttpMethod.HEAD);
         softly.assertThat(actual.getHttpProtocol()).isEqualTo(HttpProtocol.HTTP_1_1);
-        softly.assertThat(actual.getUri()).isEqualTo("/echo/head/json");
+        softly.assertThat(actual.getUri()).isEqualTo("/test/head");
         softly.assertThat(actual.getMessageBody()).isEmpty();
 
         softly.assertAll();
+    }
+
+    @Test
+    public void parseErrorUri() {
+        assertThatThrownBy(() -> new HttpRequestParser("HEAD ").parse())
+                .isInstanceOf(HttpParsingException.class)
+                .extracting(e -> ((HttpParsingException) e).getReason())
+                .isEqualTo(HttpParsingException.Reason.URI_EXPECTED);
+    }
+
+    @Test
+    public void parseErrorHttpProtocolExpected() {
+        assertThatThrownBy(() -> new HttpRequestParser("HEAD /").parse())
+                .isInstanceOf(HttpParsingException.class)
+                .extracting(e -> ((HttpParsingException) e).getReason())
+                .isEqualTo(HttpParsingException.Reason.HTTP_PROTOCOL_EXPECTED);
+    }
+
+    @Test
+    public void parseErrorHttpProtocolUnsupported() {
+        assertThatThrownBy(() -> new HttpRequestParser("HEAD / HTTP/2.0").parse())
+                .isInstanceOf(HttpParsingException.class)
+                .extracting(e -> ((HttpParsingException) e).getReason())
+                .isEqualTo(HttpParsingException.Reason.UNSUPPORTED_HTTP_PROTOCOL);
     }
 }

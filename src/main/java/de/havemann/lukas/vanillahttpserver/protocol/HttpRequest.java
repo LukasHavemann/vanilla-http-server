@@ -44,7 +44,11 @@ public class HttpRequest {
         return httpHeaders;
     }
 
-    public static class Builder {
+    public Optional<String> getHeaderValueOf(HttpHeaderField headerField) {
+        return Optional.ofNullable(this.httpHeaders.get(headerField.getHeaderFieldName()));
+    }
+
+    protected static class Builder {
         private HttpMethod httpMethod;
         private String uri;
         private HttpProtocol httpProtocol;
@@ -65,7 +69,7 @@ public class HttpRequest {
 
         public void addHttpHeader(String key, String value) {
             final String previous = httpHeaders.put(key, value);
-            // RFC 7230 requeires folding of same http header fields
+            // RFC 7230 requires folding of same http header fields
             if (previous != null) {
                 httpHeaders.put(key, previous + "," + value);
             }

@@ -1,7 +1,11 @@
 package de.havemann.lukas.vanillahttpserver.protocol;
 
+/**
+ * List of supported HTTP protocols
+ */
 public enum HttpProtocol {
-    HTTP_1("HTTP/1.0"), HTTP_1_1("HTTP/1.1");
+    HTTP_1("HTTP/1.0"),
+    HTTP_1_1("HTTP/1.1");
 
     private final String protocol;
 

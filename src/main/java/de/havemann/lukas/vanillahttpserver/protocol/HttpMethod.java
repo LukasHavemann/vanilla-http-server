@@ -1,5 +1,8 @@
 package de.havemann.lukas.vanillahttpserver.protocol;
 
+/**
+ * Supported HTTP-Methods
+ */
 public enum HttpMethod {
     GET, HEAD;
 
