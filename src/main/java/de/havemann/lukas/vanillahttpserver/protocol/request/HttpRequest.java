@@ -1,5 +1,8 @@
-package de.havemann.lukas.vanillahttpserver.protocol;
+package de.havemann.lukas.vanillahttpserver.protocol.request;
 
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpHeaderField;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpMethod;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpProtocol;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
@@ -45,7 +48,7 @@ public class HttpRequest {
     }
 
     public Optional<String> getHeaderValueOf(HttpHeaderField headerField) {
-        return Optional.ofNullable(this.httpHeaders.get(headerField.getHeaderFieldName()));
+        return Optional.ofNullable(this.httpHeaders.get(headerField.getRepresentation()));
     }
 
     protected static class Builder {

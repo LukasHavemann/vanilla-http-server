@@ -1,4 +1,9 @@
-package de.havemann.lukas.vanillahttpserver.protocol;
+package de.havemann.lukas.vanillahttpserver.protocol.request;
+
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpHeaderField;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpMethod;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpProtocol;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.ProtocolRepresentation;
 
 import java.util.StringTokenizer;
 
@@ -7,19 +12,16 @@ import java.util.StringTokenizer;
  */
 public class HttpRequestParser {
 
-    public static final String HTTP_LINE_DELIMITER = "\r\n";
-    public static final String HTTP_HEADER_FIELD_SEPARATOR = ": ";
-
     private final StringTokenizer tokenizer;
     private final HttpRequest.Builder requestBuilder = new HttpRequest.Builder();
 
     public HttpRequestParser(String request) {
-        this.tokenizer = new StringTokenizer(request, HTTP_LINE_DELIMITER);
+        this.tokenizer = new StringTokenizer(request, HttpProtocol.DELIMITER);
     }
 
     public HttpRequest parse() {
         if (!tokenizer.hasMoreTokens()) {
-            throw new HttpParsingException(HttpParsingException.Reason.EMPTY_STATUS_LINE);
+            throw HttpRequestParsingException.Reason.EMPTY_STATUS_LINE.toException();
         }
 
         parseStatusLine(tokenizer.nextToken());
@@ -33,7 +35,7 @@ public class HttpRequestParser {
     private void parseRequestBody() {
         final StringBuilder messageBody = new StringBuilder();
         while (tokenizer.hasMoreTokens()) {
-            messageBody.append(tokenizer.nextToken()).append(HTTP_LINE_DELIMITER);
+            messageBody.append(tokenizer.nextToken()).append(HttpProtocol.DELIMITER);
         }
 
         final String messageBodyResult = messageBody.toString();
@@ -54,9 +56,9 @@ public class HttpRequestParser {
         // no hasMoreTokens(), at least one token should be present.
         final String currentToken = statusLineTokens.nextToken();
 
-        final HttpMethod httpMethod = HttpMethod.detect(currentToken);
+        final HttpMethod httpMethod = ProtocolRepresentation.detect(HttpMethod.class, currentToken);
         if (httpMethod == null) {
-            throw new HttpParsingException(HttpParsingException.Reason.UNSUPPORTED_HTTP_METHOD);
+            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_METHOD.toException();
         }
 
         requestBuilder.httpMethod(httpMethod);
@@ -64,7 +66,7 @@ public class HttpRequestParser {
 
     private void parseUri(StringTokenizer statusLineTokens) {
         if (!statusLineTokens.hasMoreTokens()) {
-            throw new HttpParsingException(HttpParsingException.Reason.URI_EXPECTED);
+            throw HttpRequestParsingException.Reason.URI_EXPECTED.toException();
         }
 
         requestBuilder.requestUri(statusLineTokens.nextToken());
@@ -72,13 +74,13 @@ public class HttpRequestParser {
 
     private void parseHttpProtocol(StringTokenizer statusLineTokens) {
         if (!statusLineTokens.hasMoreTokens()) {
-            throw new HttpParsingException(HttpParsingException.Reason.HTTP_PROTOCOL_EXPECTED);
+            throw HttpRequestParsingException.Reason.HTTP_PROTOCOL_EXPECTED.toException();
         }
 
         final String currentToken = statusLineTokens.nextToken();
-        final HttpProtocol httpProtocol = HttpProtocol.detect(currentToken);
+        final HttpProtocol httpProtocol = ProtocolRepresentation.detect(HttpProtocol.class, currentToken);
         if (httpProtocol == null) {
-            throw new HttpParsingException(HttpParsingException.Reason.UNSUPPORTED_HTTP_PROTOCOL);
+            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_PROTOCOL.toException();
         }
 
         requestBuilder.httpProtocol(httpProtocol);
@@ -97,13 +99,13 @@ public class HttpRequestParser {
     }
 
     private void parseSingleHttpHeaderField(String httpHeaderField) {
-        int separator = httpHeaderField.indexOf(HTTP_HEADER_FIELD_SEPARATOR);
+        int separator = httpHeaderField.indexOf(HttpHeaderField.KEY_VALUE_DELIMITER);
         if (separator == -1) {
-            throw new HttpParsingException(HttpParsingException.Reason.INVALID_HTTP_HEADER_FIELD, httpHeaderField);
+            throw HttpRequestParsingException.Reason.INVALID_HTTP_HEADER_FIELD.toException(httpHeaderField);
         }
 
         requestBuilder.addHttpHeader(
                 httpHeaderField.substring(0, separator),
-                httpHeaderField.substring(separator + HTTP_HEADER_FIELD_SEPARATOR.length()));
+                httpHeaderField.substring(separator + HttpHeaderField.KEY_VALUE_DELIMITER.length()));
     }
 }

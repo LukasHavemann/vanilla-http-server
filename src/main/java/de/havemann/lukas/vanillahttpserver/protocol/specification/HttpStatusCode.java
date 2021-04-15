@@ -1,11 +1,11 @@
-package de.havemann.lukas.vanillahttpserver.protocol;
+package de.havemann.lukas.vanillahttpserver.protocol.specification;
 
 import java.util.Objects;
 
 /**
  * list of used http status code. For full list with explanation {@see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
  */
-public enum HttpStatusCode {
+public enum HttpStatusCode implements ProtocolRepresentation {
 
     // 2xx successful operation
     OK(200, "OK"),
@@ -32,7 +32,8 @@ public enum HttpStatusCode {
         return code;
     }
 
-    public String getDescription() {
-        return description;
+    @Override
+    public String getRepresentation() {
+        return code + " " + description;
     }
 }
