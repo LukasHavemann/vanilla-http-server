@@ -10,12 +10,14 @@ public enum HttpStatusCode implements ProtocolRepresentation {
     // 2xx successful operation
     OK(200, "OK"),
 
+    // 3xx redirection,
+    NOT_MODIFIED(304, "Not Modified"),
+
     // 4xx client error
     BAD_REQUEST(400, "Bad Request"),
     FORBIDDEN(403, "Forbidden"),
+    NOT_FOUND(404, "Not Found"),
 
-    // 3xx redirection
-    NOT_MODIFIED(304, "Not Modified"),
 
     // 5xx server error
     INTERNAL_SERVER_ERROR(500, "Internal Server Error");

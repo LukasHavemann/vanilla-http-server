@@ -52,7 +52,17 @@ public class ConnectionHandler {
                 .protocol(HttpProtocol.HTTP_1_1)
                 .statusCode(statusCode);
 
-        final File file = new File("./" + request.getUri());
+        final String requestedPath = "./" + URI.create(request.getUri()).getPath();
+        LOG.info("requestedPath " + requestedPath);
+        final File file = new File(requestedPath);
+
+        if (!file.exists()) {
+            httpResponseWriter
+                    .writeHeader(builder.statusCode(HttpStatusCode.NOT_FOUND).build())
+                    .finish();
+            return this;
+        }
+
         if (file.isDirectory()) {
             httpResponseWriter.writeHeader(builder.build());
             DirectoryHtmlPage directoryHtmlPage = new DirectoryHtmlPage(file.toURI().toString(), outputstream);

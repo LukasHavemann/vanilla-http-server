@@ -6,6 +6,7 @@ import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpProtocol;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.*;
 
@@ -90,7 +91,7 @@ public class HttpRequest {
     @Override
     public String toString() {
         // for testing purpose only
-        return ReflectionToStringBuilder.toString(this);
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override

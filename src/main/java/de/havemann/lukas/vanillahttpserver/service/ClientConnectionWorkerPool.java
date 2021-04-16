@@ -46,7 +46,7 @@ public class ClientConnectionWorkerPool implements ClientConnectionHandler {
                     try {
                         inputStream.close();
                     } catch (IOException e) {
-                        LOG.error("error during inputstream close", e);
+                        LOG.error("error during inputStream close", e);
                     }
                 }
                 if (clientSocket != null) {

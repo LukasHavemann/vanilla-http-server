@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 
 public class HttpRequestBuffer {
 
@@ -32,10 +33,17 @@ public class HttpRequestBuffer {
     }
 
     private void readUntilEndOfHttpHeader(InputStream stream) throws IOException {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        while (!(line = reader.readLine()).isBlank()) {
-            buffer.append(line).append(HttpProtocol.DELIMITER);
+        try {
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            String line;
+            while (!(line = reader.readLine()).isBlank()) {
+                buffer.append(line).append(HttpProtocol.DELIMITER);
+            }
+        } catch (IOException ex) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("received so far:\n" + buffer.toString());
+            }
+            throw ex;
         }
     }
 

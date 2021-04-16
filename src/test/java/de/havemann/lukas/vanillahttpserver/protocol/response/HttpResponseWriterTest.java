@@ -16,7 +16,7 @@ class HttpResponseWriterTest {
 
     private static final String EXPECTED_RESPONSE = String.join("\r\n",
             "HTTP/1.1 200 OK",
-            "E_TAG: SOMETHING",
+            "ETag: SOMETHING",
             "",
             "Hello World!",
             "",

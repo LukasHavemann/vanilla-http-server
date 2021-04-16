@@ -21,7 +21,8 @@ public enum HttpHeaderField implements ProtocolRepresentation {
         this.headerFieldName = headerFieldName;
     }
 
-    public String getHeaderFieldName() {
+    @Override
+    public String getRepresentation() {
         return headerFieldName;
     }
 }
