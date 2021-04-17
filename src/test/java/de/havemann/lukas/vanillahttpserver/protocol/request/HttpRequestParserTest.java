@@ -1,5 +1,8 @@
-package de.havemann.lukas.vanillahttpserver.protocol;
+package de.havemann.lukas.vanillahttpserver.protocol.request;
 
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpHeaderField;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpMethod;
+import de.havemann.lukas.vanillahttpserver.protocol.specification.HttpProtocol;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +10,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-public class HttpRequestParserTest {
+class HttpRequestParserTest {
 
     private static final String EXAMPLE_GET_REQUEST = String.join("\r\n",
             "GET / HTTP/1.1",
@@ -32,7 +35,7 @@ public class HttpRequestParserTest {
         softly.assertThat(actual.getHttpProtocol()).isEqualTo(HttpProtocol.HTTP_1_1);
         softly.assertThat(actual.getUri()).isEqualTo("/");
         softly.assertThat(actual.getHttpHeaders()).containsKey("Content-Type").hasSize(5);
-        softly.assertThat(actual.getHeaderValueOf(HttpHeaderField.CONNECTION)).isEqualTo(Optional.of("Keep-Alive"));
+        softly.assertThat(actual.getHeaderValueOf(HttpHeaderField.CONNECTION)).isNotEmpty();
         softly.assertThat(actual.getMessageBody()).isEmpty();
 
         softly.assertAll();
@@ -55,24 +58,24 @@ public class HttpRequestParserTest {
     @Test
     public void parseErrorUri() {
         assertThatThrownBy(() -> new HttpRequestParser("HEAD ").parse())
-                .isInstanceOf(HttpParsingException.class)
-                .extracting(e -> ((HttpParsingException) e).getReason())
-                .isEqualTo(HttpParsingException.Reason.URI_EXPECTED);
+                .isInstanceOf(HttpRequestParsingException.class)
+                .extracting(e -> ((HttpRequestParsingException) e).getReason())
+                .isEqualTo(HttpRequestParsingException.Reason.URI_EXPECTED);
     }
 
     @Test
     public void parseErrorHttpProtocolExpected() {
         assertThatThrownBy(() -> new HttpRequestParser("HEAD /").parse())
-                .isInstanceOf(HttpParsingException.class)
-                .extracting(e -> ((HttpParsingException) e).getReason())
-                .isEqualTo(HttpParsingException.Reason.HTTP_PROTOCOL_EXPECTED);
+                .isInstanceOf(HttpRequestParsingException.class)
+                .extracting(e -> ((HttpRequestParsingException) e).getReason())
+                .isEqualTo(HttpRequestParsingException.Reason.HTTP_PROTOCOL_EXPECTED);
     }
 
     @Test
     public void parseErrorHttpProtocolUnsupported() {
         assertThatThrownBy(() -> new HttpRequestParser("HEAD / HTTP/2.0").parse())
-                .isInstanceOf(HttpParsingException.class)
-                .extracting(e -> ((HttpParsingException) e).getReason())
-                .isEqualTo(HttpParsingException.Reason.UNSUPPORTED_HTTP_PROTOCOL);
+                .isInstanceOf(HttpRequestParsingException.class)
+                .extracting(e -> ((HttpRequestParsingException) e).getReason())
+                .isEqualTo(HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_PROTOCOL);
     }
 }

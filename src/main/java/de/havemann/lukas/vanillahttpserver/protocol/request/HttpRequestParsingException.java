@@ -1,25 +1,19 @@
-package de.havemann.lukas.vanillahttpserver.protocol;
+package de.havemann.lukas.vanillahttpserver.protocol.request;
 
 import java.util.Objects;
 
 /**
  * Error during parsing of http-request. Please refer to {@link #getReason()} for parsing error reason.
  */
-public class HttpParsingException extends RuntimeException {
+public class HttpRequestParsingException extends RuntimeException {
 
     private final Reason reason;
     private final String errorToken;
 
-    public HttpParsingException(Reason reason) {
-        super(buildMessage(reason, null));
-        this.reason = Objects.requireNonNull(reason);
-        this.errorToken = null;
-    }
-
-    public HttpParsingException(Reason reason, String token) {
+    private HttpRequestParsingException(Reason reason, String token) {
         super(buildMessage(reason, token));
         this.reason = Objects.requireNonNull(reason);
-        this.errorToken = Objects.requireNonNull(token);
+        this.errorToken = token;
     }
 
     private static String buildMessage(Reason reason, String token) {
@@ -56,6 +50,14 @@ public class HttpParsingException extends RuntimeException {
         URI_EXPECTED,
         HTTP_PROTOCOL_EXPECTED,
         UNSUPPORTED_HTTP_PROTOCOL,
-        INVALID_HTTP_HEADER_FIELD
+        INVALID_HTTP_HEADER_FIELD;
+
+        public HttpRequestParsingException toException(String token) {
+            return new HttpRequestParsingException(this, Objects.requireNonNull(token));
+        }
+
+        public HttpRequestParsingException toException() {
+            return new HttpRequestParsingException(this, null);
+        }
     }
 }
