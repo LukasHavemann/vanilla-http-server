@@ -5,7 +5,7 @@ vanilla:
     host: localhost
     basedir: "./src/test/resources/sampledirectory"
     http:
-      requestBufferSizeInByte: 8096
+      keepAliveTimeout: 10s
 
 logging:
   level:
