@@ -42,8 +42,6 @@ public class HttpResponseWriter {
     }
 
     public HttpResponseWriter finish() throws IOException {
-        stream.write(HttpProtocol.DELIMITER.getBytes(StandardCharsets.UTF_8));
-        stream.write(HttpProtocol.DELIMITER.getBytes(StandardCharsets.UTF_8));
         stream.flush();
         return this;
     }

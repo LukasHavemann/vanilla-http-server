@@ -35,14 +35,10 @@ public class ConnectionHandler {
     public ConnectionHandler readRequest() throws IOException {
         try {
             request = new HttpRequestBuffer().consume(inputStream);
-            LOG.info("Received {} request", request.getHttpProtocol());
+            LOG.info("Received {} request", request);
         } catch (HttpRequestParsingException ex) {
             statusCode = HttpStatusCode.BAD_REQUEST;
         }
-        return this;
-    }
-
-    public ConnectionHandler dispatchRequestTo() {
         return this;
     }
 
@@ -52,9 +48,7 @@ public class ConnectionHandler {
                 .protocol(HttpProtocol.HTTP_1_1)
                 .statusCode(statusCode);
 
-        final String requestedPath = "./" + URI.create(request.getUri()).getPath();
-        LOG.info("requestedPath " + requestedPath);
-        final File file = new File(requestedPath);
+        File file = fileService.getFile(request.getUri());
 
         if (!file.exists()) {
             httpResponseWriter
@@ -64,7 +58,10 @@ public class ConnectionHandler {
         }
 
         if (file.isDirectory()) {
-            httpResponseWriter.writeHeader(builder.build());
+            httpResponseWriter.writeHeader(builder
+                    .add(HttpHeaderField.CONTENT_TYPE, MediaType.HTML.getRepresentation())
+                    // .add(HttpHeaderField.TRANSFER_ENCODING, "chunked")
+                    .build());
             DirectoryHtmlPage directoryHtmlPage = new DirectoryHtmlPage(file.toURI().toString(), outputstream);
             directoryHtmlPage.render(fileService.listDirectory(file.toURI()));
         } else {
@@ -72,7 +69,6 @@ public class ConnectionHandler {
             httpResponseWriter.writeHeader(builder.add(HttpHeaderField.CONTENT_TYPE, mediaType.getRepresentation()).build());
             httpResponseWriter.streamDataFrom(new FileInputStream(file));
         }
-
 
         httpResponseWriter.finish();
 

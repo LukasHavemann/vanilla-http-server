@@ -3,6 +3,7 @@ vanilla:
     port: 8080
     backlog: 50
     host: localhost
+    basedir: "./src/test/resources/sampledirectory"
     http:
       requestBufferSizeInByte: 8096
 

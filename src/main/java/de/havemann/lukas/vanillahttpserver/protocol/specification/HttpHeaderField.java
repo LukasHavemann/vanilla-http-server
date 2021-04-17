@@ -7,6 +7,7 @@ public enum HttpHeaderField implements ProtocolRepresentation {
 
     CONNECTION("Connection"),
     CONTENT_TYPE("ContentType"),
+    TRANSFER_ENCODING("Transfer-Encoding"),
 
     E_TAG("ETag"),
     IF_MATCH("If-Match"),

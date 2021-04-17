@@ -9,6 +9,7 @@ import java.util.*;
 public enum MediaType implements ProtocolRepresentation {
 
     ASCII_TEXT("text/plain", "txt"),
+    HTML("text/html", "html", "htm"),
     JSON("application/json", "json"),
     JAVASCRIPT("text/javascript,", "js"),
     JPEG_IMAGES("image/jpeg", "jpg", "jpeg"),
@@ -17,7 +18,6 @@ public enum MediaType implements ProtocolRepresentation {
     XML("application/xml", "xml"),
     ZIP("application/zip", "zip"),
     UNKNOWN("application/octet-stream");
-
 
     private final String mediaTypeRepresentation;
     private final List<String> extensions;

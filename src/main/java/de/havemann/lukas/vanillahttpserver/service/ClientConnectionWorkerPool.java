@@ -25,7 +25,7 @@ public class ClientConnectionWorkerPool implements ClientConnectionHandler {
     private FileService fileService;
 
     public boolean offer(Socket clientSocket) {
-        new Thread(() -> {
+        Thread thread = new Thread(() -> {
 
             InputStream inputStream = null;
             OutputStream outputstream;
@@ -36,11 +36,10 @@ public class ClientConnectionWorkerPool implements ClientConnectionHandler {
 
                 new ConnectionHandler(inputStream, outputstream, fileService)
                         .readRequest()
-                        .dispatchRequestTo()
                         .writeResponse();
 
             } catch (Exception e) {
-                LOG.error("error during handling of client", e);
+                LOG.error("error during handling of client: ", e);
             } finally {
                 if (inputStream != null) {
                     try {
@@ -57,7 +56,9 @@ public class ClientConnectionWorkerPool implements ClientConnectionHandler {
                     }
                 }
             }
-        }).start();
+        });
+        // thread.setName("client");
+        thread.start();
 
         return true;
     }

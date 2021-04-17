@@ -18,9 +18,7 @@ class HttpResponseWriterTest {
             "HTTP/1.1 200 OK",
             "ETag: SOMETHING",
             "",
-            "Hello World!",
-            "",
-            "");
+            "Hello World!");
 
     @Test
     public void httpResponseOkWriterTest() throws IOException {
