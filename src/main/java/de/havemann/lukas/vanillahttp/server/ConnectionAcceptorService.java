@@ -1,6 +1,6 @@
 package de.havemann.lukas.vanillahttp.server;
 
-import de.havemann.lukas.vanillahttp.dispatcher.ClientConnectionDispatcher;
+import de.havemann.lukas.vanillahttp.dispatcher.ClientSocketDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,7 @@ public class ConnectionAcceptorService {
 
     public static final Duration ACCEPTOR_THREAD_TIMEOUT = Duration.ofMillis(1000);
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionAcceptorService.class);
-    private final ClientConnectionDispatcher clientConnectionDispatcher;
+    private final ClientSocketDispatcher clientSocketDispatcher;
     private final AtomicReference<AcceptorThreadState> state = new AtomicReference<>(AcceptorThreadState.NOT_STARTED);
 
     @Value("${vanilla.server.port}")
@@ -34,13 +34,13 @@ public class ConnectionAcceptorService {
     private ServerSocket acceptingSocket;
     private Thread acceptorThread;
 
-    public ConnectionAcceptorService(ClientConnectionDispatcher clientConnectionDispatcher) {
-        this.clientConnectionDispatcher = clientConnectionDispatcher;
+    public ConnectionAcceptorService(ClientSocketDispatcher clientSocketDispatcher) {
+        this.clientSocketDispatcher = clientSocketDispatcher;
     }
 
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        openSocket();
+        bindAcceptingSocket();
 
         LOG.info("start excepting client connections");
 
@@ -50,7 +50,7 @@ public class ConnectionAcceptorService {
         acceptorThread.start();
     }
 
-    private void openSocket() {
+    private void bindAcceptingSocket() {
         try {
             acceptingSocket = new ServerSocket(port, backlog, InetAddress.getByName(host));
             acceptingSocket.setSoTimeout((int) ACCEPTOR_THREAD_TIMEOUT.toMillis());
@@ -67,7 +67,7 @@ public class ConnectionAcceptorService {
             Socket clientSocket;
             try {
                 clientSocket = acceptingSocket.accept();
-                clientConnectionDispatcher.dispatch(clientSocket);
+                clientSocketDispatcher.dispatch(clientSocket);
             } catch (SocketTimeoutException e) {
                 LOG.debug("clientSocket timeout. free thread to check shutdown flag");
             } catch (IOException e) {

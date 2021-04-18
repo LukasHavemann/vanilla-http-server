@@ -1,14 +1,14 @@
 package de.havemann.lukas.vanillahttp.search;
 
-import de.havemann.lukas.vanillahttp.dispatcher.ClientConnectionDispatcher;
 import de.havemann.lukas.vanillahttp.dispatcher.ClientRequestProcessor;
+import de.havemann.lukas.vanillahttp.dispatcher.ClientSocketDispatcher;
 import de.havemann.lukas.vanillahttp.protocol.request.HttpRequest;
-import de.havemann.lukas.vanillahttp.protocol.response.HttpResponseHeader;
-import de.havemann.lukas.vanillahttp.protocol.response.HttpResponseWriter;
+import de.havemann.lukas.vanillahttp.protocol.response.HttpResponse;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpMethod;
-import de.havemann.lukas.vanillahttp.protocol.specification.HttpProtocol;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpStatusCode;
 import de.havemann.lukas.vanillahttp.protocol.specification.MediaType;
+import de.havemann.lukas.vanillahttp.protocol.specification.etag.ETag;
+import de.havemann.lukas.vanillahttp.protocol.specification.etag.ETagEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,70 +16,62 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.time.ZonedDateTime;
+import java.util.Optional;
 
 @Component
 @Scope("prototype")
 public class SearchServiceRequestProcessor implements ClientRequestProcessor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClientConnectionDispatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClientSocketDispatcher.class);
 
-    private final HttpResponseWriter httpResponseWriter;
-    @Autowired
-    private ContentSearchService contentSearchService;
+    private final ContentSearchService contentSearchService;
 
-    public SearchServiceRequestProcessor(HttpResponseWriter responseWriter) {
-        this.httpResponseWriter = Objects.requireNonNull(responseWriter);
+    public SearchServiceRequestProcessor(@Autowired ContentSearchService contentSearchService) {
+        this.contentSearchService = contentSearchService;
     }
 
-    public void processRequest(HttpRequest request) throws IOException {
-        if (request == null) {
-            httpResponseWriter.header(new HttpResponseHeader.Builder()
-                    .protocol(HttpProtocol.HTTP_1_1)
-                    .statusCode(HttpStatusCode.BAD_REQUEST))
-                    .finish();
+    public void processRequest(HttpRequest request, HttpResponse.Builder response) throws IOException {
+        final ContentSearchService.Response searchResponse = contentSearchService.fetch(request.getUri());
+
+        if (searchResponse.getResult() != ContentSearchService.Result.FOUND) {
+            response.statusCode(searchResponse.getResult().getDefaultHttpCode());
             return;
         }
 
-        final ContentSearchService.Response response = contentSearchService.fetch(request.getUri());
-
-        if (response.getResult() != ContentSearchService.Result.FOUND) {
-            httpResponseWriter.header(new HttpResponseHeader.Builder()
-                    .protocol(HttpProtocol.HTTP_1_1)
-                    .statusCode(response.getResult().getDefaultHttpCode()))
-                    .finish();
-            return;
-        }
-
-        handleFoundSearchResult(request, response);
+        handleFoundSearchResult(request, searchResponse, response);
     }
 
-    private void handleFoundSearchResult(HttpRequest request, ContentSearchService.Response response) throws IOException {
+    private void handleFoundSearchResult(HttpRequest request, ContentSearchService.Response searchResponse, HttpResponse.Builder builder) throws IOException {
+        builder.statusCode(searchResponse.getResult().getDefaultHttpCode())
+                .contentType(searchResponse.getMediaType().orElse(MediaType.UNKNOWN));
+
+        final Optional<ZonedDateTime> lastModified = searchResponse.getLastModified();
+        final Optional<ETag> eTag = searchResponse.getHash().map(hash -> new ETag(hash, ETag.Kind.STRONG));
+
+        lastModified.ifPresent(builder::lastModified);
+        eTag.ifPresent(builder::eTag);
+
+
         if (request.getHttpMethod() == HttpMethod.HEAD) {
-            httpResponseWriter.header(new HttpResponseHeader.Builder()
-                    .protocol(HttpProtocol.HTTP_1_1)
-                    .statusCode(response.getResult().getDefaultHttpCode())
-                    .contentType(response.getMediaType().orElse(MediaType.UNKNOWN)))
-                    .finish();
             return;
         }
 
         if (request.getHttpMethod() == HttpMethod.GET) {
-            httpResponseWriter.header(new HttpResponseHeader.Builder()
-                    .protocol(HttpProtocol.HTTP_1_1)
-                    .statusCode(response.getResult().getDefaultHttpCode())
-                    .contentType(response.getMediaType().orElse(MediaType.UNKNOWN)))
-                    .renderChunked(response.getInputStream().orElseThrow(() -> new IllegalStateException(response.toString())))
-                    .finish();
+            final boolean shouldContentBeSend = new ETagEvaluator(request.getHeader())
+                    .shouldContentBeSend(eTag.orElse(null), lastModified.orElse(null));
+
+            if (shouldContentBeSend) {
+                builder.payloadRenderer(() -> searchResponse.getInputStream().orElseThrow(() -> new IllegalStateException(searchResponse.toString())));
+            } else {
+                builder.statusCode(HttpStatusCode.NOT_MODIFIED);
+            }
             return;
         }
 
         // error case. if we reach here a programming error occurred
         LOG.error("request not handled {}", request, new IllegalStateException("unhandled request"));
 
-        httpResponseWriter.header(new HttpResponseHeader.Builder()
-                .protocol(HttpProtocol.HTTP_1_1)
-                .statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR))
-                .finish();
+        builder.statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR);
     }
 }

@@ -1,7 +1,6 @@
 package de.havemann.lukas.vanillahttp.protocol.response;
 
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpHeaderField;
-import de.havemann.lukas.vanillahttp.protocol.specification.HttpProtocol;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,44 +10,39 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
 
+/**
+ * {@link HttpResponseWriter} wraps a {@link OutputStream}
+ */
 public class HttpResponseWriter implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpResponseWriter.class);
 
     private final OutputStream outputStream;
-
-    private HttpResponseHeader.Builder headerBuilder;
-    private boolean writeHeaderCalled;
     private int chunkedEncodingBufferSize = 255;
 
     public HttpResponseWriter(OutputStream outputStream) {
         this.outputStream = outputStream;
     }
 
-    public HttpResponseWriter header(HttpResponseHeader.Builder headerBuilder) {
-        this.headerBuilder = headerBuilder
-                .protocol(HttpProtocol.HTTP_1_1)
-                .add(HttpHeaderField.CONNECTION, "keep-alive")
-                .add(HttpHeaderField.KEEP_ALIVE, "timeout=10");
+    public void write(HttpResponse httpResponse) throws Exception {
+        writeHeader(httpResponse);
 
-        return this;
-    }
-
-    private void writeHeader() throws IOException {
-        if (writeHeaderCalled) {
-            throw new IllegalStateException("header already written. response must be finished first.");
+        if (httpResponse.getPayloadRenderer().isPresent()) {
+            renderChunked(httpResponse.getPayloadRenderer().get());
         }
 
-        writeHeaderCalled = true;
+        finish();
+    }
 
-        final HttpResponseHeader header = headerBuilder.build();
-        outputStream.write(header.getProtocol().asUTF8Bytes());
+    private void writeHeader(HttpResponse httpResponse) throws IOException {
+        outputStream.write(httpResponse.getProtocol().asUTF8Bytes());
         outputStream.write(' ');
-        outputStream.write(header.getStatusCode().asUTF8Bytes());
+        outputStream.write(httpResponse.getStatusCode().asUTF8Bytes());
         writeCRLF();
 
-        for (Pair<HttpHeaderField, String> headerField : header.getHeaderFields()) {
+        for (Pair<HttpHeaderField, String> headerField : httpResponse.getHeaderFields()) {
             outputStream.write(headerField.getKey().asUTF8Bytes());
             outputStream.write(HttpHeaderField.KEY_VALUE_DELIMITER.getBytes(StandardCharsets.UTF_8));
             outputStream.write(headerField.getValue().getBytes(StandardCharsets.UTF_8));
@@ -56,29 +50,29 @@ public class HttpResponseWriter implements Closeable {
         }
     }
 
-    public HttpResponseWriter finish() throws IOException {
-        if (!writeHeaderCalled) {
-            writeHeader();
-        }
-
+    private void finish() throws IOException {
         writeCRLF();
-
-        // reset writer for next response
-        writeHeaderCalled = false;
         outputStream.flush();
-        return this;
     }
 
-    public HttpResponseWriter renderChunked(InputStream inputStream) throws IOException {
-        headerBuilder.add(HttpHeaderField.TRANSFER_ENCODING, "chunked");
-
-        writeHeader();
-
-        writeCRLF();
-        writeOutChunked(inputStream);
-        writeFinalByte();
-
-        return this;
+    private void renderChunked(Callable<InputStream> inputStreamSupplier) throws Exception {
+        InputStream inputStream = null;
+        try {
+            writeCRLF();
+            inputStream = inputStreamSupplier.call();
+            writeOutChunked(inputStream);
+            writeFinalByte();
+        } catch (Exception outerex) {
+            try {
+                // opened inputStream to filesystem so we are responsible for closing it again
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (Exception innerex) {
+                outerex.addSuppressed(innerex);
+            }
+            throw outerex;
+        }
     }
 
     private void writeFinalByte() throws IOException {

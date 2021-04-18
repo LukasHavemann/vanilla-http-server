@@ -8,7 +8,7 @@ import de.havemann.lukas.vanillahttp.protocol.specification.ProtocolRepresentati
 import java.util.StringTokenizer;
 
 /**
- * Simple implementation of a recursive descent parser for HTTP/1.0 and HTTP/1.1 request
+ * Simple implementation of a recursive descent parser for HTTP/1.0 and HTTP/1.1 requests.
  */
 public class HttpRequestParser {
 
@@ -58,7 +58,7 @@ public class HttpRequestParser {
 
         final HttpMethod httpMethod = ProtocolRepresentation.detect(HttpMethod.class, currentToken);
         if (httpMethod == null) {
-            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_METHOD.toException();
+            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_METHOD.toException(currentToken);
         }
 
         requestBuilder.httpMethod(httpMethod);

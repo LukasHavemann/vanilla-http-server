@@ -7,12 +7,15 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Optional;
 
+/**
+ * {@link HttpRequestBuffer} reads lines from inputStream until a complete http request could be read.
+ */
 public class HttpRequestBuffer implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestBuffer.class);
 
-    final private StringBuilder buffer = new StringBuilder(512);
     final private BufferedReader reader;
+    private StringBuilder buffer = new StringBuilder(512);
 
     public HttpRequestBuffer(InputStream inputStream) {
         reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -26,15 +29,22 @@ public class HttpRequestBuffer implements Closeable {
             LOG.debug("received http request " + httpRequest);
         }
 
+        if (httpRequest.isEmpty()) {
+            return Optional.empty();
+        }
+
         try {
             return Optional.of(new HttpRequestParser(httpRequest).parse());
         } catch (HttpRequestParsingException ex) {
-            LOG.error("Can't parse http request. got " + buffer, ex);
+            LOG.info("Can't parse http request. got " + buffer, ex);
+            if (LOG.isDebugEnabled()) {
+            }
+            throw ex;
         }
-        return Optional.empty();
     }
 
     private void readUntilEndOfHttpHeader() throws IOException {
+        buffer = new StringBuilder(512);
         try {
             String line;
             while ((line = reader.readLine()) != null && !line.isBlank()) {

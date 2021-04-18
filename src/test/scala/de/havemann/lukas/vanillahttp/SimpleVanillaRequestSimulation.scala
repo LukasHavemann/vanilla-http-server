@@ -3,6 +3,7 @@ package de.havemann.lukas.vanillahttp
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
+import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 
 import scala.concurrent.duration.DurationInt
 
@@ -14,12 +15,14 @@ class SimpleVanillaRequestSimulation extends Simulation {
     .shareConnections
 
   val textFileRequest = scenario("request file")
-    .exec(http("request text file")
-      .get("/src/test/resources/sampledirectory/fileonfirstlevel.txt"))
+    .exec(toActionBuilder(http("request text file")
+      .get("/fileonfirstlevel.txt")
+      .check(status.is(200))
+      .check(substring("file on first level").exists)))
 
   setUp(
     textFileRequest.inject(
-      rampUsers(50).during(15.seconds),
-      constantUsersPerSec(200).during(30.seconds))
+      rampUsers(20).during(15.seconds),
+      constantUsersPerSec(100).during(30.seconds))
       .protocols(httpProtocol))
 }
