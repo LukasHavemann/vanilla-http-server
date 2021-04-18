@@ -1,6 +1,6 @@
 package de.havemann.lukas.vanillahttp.protocol.request;
 
-import de.havemann.lukas.vanillahttp.protocol.specification.HttpHeaderField;
+import de.havemann.lukas.vanillahttp.protocol.specification.HttpHeader;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpMethod;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpProtocol;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -17,14 +17,14 @@ public class HttpRequest {
     private final String uri;
     private final HttpProtocol httpProtocol;
     private final String messageBody;
-    private final Map<String, String> httpHeaders;
+    private final HttpHeader httpHeader;
 
     public HttpRequest(Builder builder) {
         this.httpMethod = Objects.requireNonNull(builder.httpMethod);
         this.uri = Objects.requireNonNull(builder.uri);
         this.httpProtocol = Objects.requireNonNull(builder.httpProtocol);
         this.messageBody = builder.messageBody;
-        this.httpHeaders = Collections.unmodifiableMap(builder.httpHeaders);
+        this.httpHeader = new HttpHeader(Collections.unmodifiableMap(builder.httpHeader));
     }
 
     public HttpMethod getHttpMethod() {
@@ -43,16 +43,8 @@ public class HttpRequest {
         return Optional.ofNullable(messageBody);
     }
 
-    public Map<String, String> getHttpHeaders() {
-        return httpHeaders;
-    }
-
-    public Optional<String> getHeaderValueOf(HttpHeaderField headerField) {
-        return Optional.ofNullable(this.httpHeaders.get(headerField.getRepresentation()));
-    }
-
-    public boolean isKeepAlive() {
-        return "keep-alive".equals(this.getHeaderValueOf(HttpHeaderField.KEEP_ALIVE).orElse(""));
+    public HttpHeader getHeader() {
+        return httpHeader;
     }
 
     @Override
@@ -74,35 +66,41 @@ public class HttpRequest {
         return EqualsBuilder.reflectionEquals(this, other);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     protected static class Builder {
-        private final Map<String, String> httpHeaders = new HashMap<>();
+        private final Map<String, String> httpHeader = new HashMap<>();
         private HttpMethod httpMethod;
         private String uri;
         private HttpProtocol httpProtocol;
         private String messageBody;
 
-        public void httpMethod(HttpMethod httpMethod) {
+        public Builder httpMethod(HttpMethod httpMethod) {
             this.httpMethod = httpMethod;
+            return this;
         }
 
-        public void requestUri(String uri) {
+        public Builder requestUri(String uri) {
             this.uri = uri;
+            return this;
         }
 
-        public void httpProtocol(HttpProtocol httpProtocol) {
+        public Builder httpProtocol(HttpProtocol httpProtocol) {
             this.httpProtocol = httpProtocol;
+            return this;
         }
 
-        public void addHttpHeader(String key, String value) {
-            final String previous = httpHeaders.put(key, value);
+        public Builder addHttpHeader(String key, String value) {
+            final String previous = httpHeader.put(key, value);
             // RFC 7230 requires folding of same http header fields
             if (previous != null) {
-                httpHeaders.put(key, previous + "," + value);
+                httpHeader.put(key, previous + "," + value);
             }
+            return this;
         }
 
-        public void messageBody(String messageBody) {
+        public Builder messageBody(String messageBody) {
             this.messageBody = messageBody;
+            return this;
         }
 
         public HttpRequest build() {

@@ -3,7 +3,9 @@ vanilla:
     port: 8080
     backlog: 50
     host: localhost
-    basedir: "./src/test/resources/sampledirectory"
+    filesystem:
+      maxInMemory: 30KB
+      basedir: "./src/test/resources/sampledirectory"
     http:
       keepAliveTimeout: 10s
 

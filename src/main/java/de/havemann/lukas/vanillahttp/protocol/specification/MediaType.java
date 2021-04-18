@@ -50,6 +50,10 @@ public enum MediaType implements ProtocolRepresentation {
             }
         }
 
+        /**
+         * Determines the {@link MediaType} instance to the given file extension. If the file extension is unknown,
+         * {@link MediaType#UNKNOWN} will be returned.
+         */
         public static MediaType getByFileExtension(String fileExtension) {
             return FILE_EXTENSION_TO_MEDIA_TYPE.getOrDefault(fileExtension, MediaType.UNKNOWN);
         }

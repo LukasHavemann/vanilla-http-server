@@ -37,11 +37,10 @@ public class DirectoryHtmlPage {
         this.outputStream = Objects.requireNonNull(outputStream);
     }
 
-    public DirectoryHtmlPage render() throws IOException {
+    public void render() throws IOException {
         outputStream.write(START_PAGE.replaceAll("#directoryPath", directoryName).getBytes(StandardCharsets.UTF_8));
         renderFiles();
         outputStream.write(END_PAGE.getBytes(StandardCharsets.UTF_8));
-        return this;
     }
 
     private void renderFiles() throws IOException {

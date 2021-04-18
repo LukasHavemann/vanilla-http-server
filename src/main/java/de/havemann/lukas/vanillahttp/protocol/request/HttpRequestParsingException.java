@@ -3,7 +3,7 @@ package de.havemann.lukas.vanillahttp.protocol.request;
 import java.util.Objects;
 
 /**
- * Error during parsing of http-request. Please refer to {@link #getReason()} for parsing error reason.
+ * Error during parsing of http request. Please refer to {@link #getReason()} for parsing error reason.
  */
 public class HttpRequestParsingException extends RuntimeException {
 
@@ -26,7 +26,7 @@ public class HttpRequestParsingException extends RuntimeException {
     }
 
     /**
-     * Reason why parsing of http-request failed
+     * Reason why parsing of http request failed
      *
      * @return reason why parsing of http-request failed
      */

@@ -3,15 +3,15 @@ package de.havemann.lukas.vanillahttp.protocol.specification;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Represents a standardized protocol element
+ * Represents a token/element of the HTTP protocol representation.
  */
 public interface ProtocolRepresentation {
 
     /**
-     * Determines whether the passed token belongs to the given protocol elements
+     * Determines whether the passed token belongs to the specified protocol elements
      *
-     * @param enumClass to determine possible protocol elements from
-     * @param token     to check
+     * @param enumClass Class of enum to determine possible protocol elements from
+     * @param token     token to be parsed
      * @param <T>       Type of enum-class with possible protocol elements
      * @return null, if no matching protocol element can be found
      */
@@ -31,7 +31,7 @@ public interface ProtocolRepresentation {
     }
 
     /**
-     * @return String-Representation of protocol element
+     * @return string representation of protocol element
      */
     default String getRepresentation() {
         return this.toString();

@@ -8,7 +8,7 @@ import de.havemann.lukas.vanillahttp.protocol.specification.ProtocolRepresentati
 import java.util.StringTokenizer;
 
 /**
- * Simple implementation of a recursive descent parser for HTTP/1.0 and HTTP/1.1 request
+ * Simple implementation of a recursive descent parser for HTTP/1.0 and HTTP/1.1 requests.
  */
 public class HttpRequestParser {
 

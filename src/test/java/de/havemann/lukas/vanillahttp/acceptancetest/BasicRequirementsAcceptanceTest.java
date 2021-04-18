@@ -6,13 +6,14 @@ import org.assertj.core.api.SoftAssertions;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.junit.jupiter.api.BeforeAll;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -20,38 +21,45 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = VanillaHttpServer.class)
 @TestPropertySource(properties = {
         "vanilla.server.port=9999",
-        "vanilla.server.basedir=./src/test/resources/sampledirectory"
+        "vanilla.server.filesystem.basedir=./src/test/resources/sampledirectory"
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicRequirementsAcceptanceTest {
+class BasicRequirementsAcceptanceTest {
 
     public static final String BASE_URL = "http://localhost:9999/";
-    private Connection client;
-
-    @BeforeAll
-    public void setup() {
-        client = Jsoup.connect(BASE_URL);
-    }
 
     /**
      * Server must handle get request and its is possible to discover subdirectories
      */
     @Test
-    public void httpGetRequestToBaseDirTest() throws IOException {
-        final Document document = client.url(BASE_URL).method(Connection.Method.GET).execute().parse();
+    void httpGetRequestToBaseDirTest() throws IOException {
+        final Document document = Jsoup.connect(BASE_URL).method(Connection.Method.GET).execute().parse();
 
-        final SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(document.select("li")).hasSize(4);
-        softly.assertThat(document.select("li:first-of-type").text()).isEqualTo("subdirectory/");
-        softly.assertAll();
+        assertThat(document.select("li").stream().map(Element::text).collect(Collectors.toList()))
+                .hasSize(4)
+                .contains("dirwithhtml/")
+                .startsWith("subdirectory/");
+    }
+
+    /**
+     * Server must prevent access outside of base dir.
+     */
+    @Test
+    void httpGetOutsideFromBaseDirIsPreventedTest() throws IOException {
+        try {
+            Jsoup.connect(BASE_URL + "../../").method(Connection.Method.GET).execute();
+            fail("jsoup should have thrown exception");
+        } catch (org.jsoup.HttpStatusException ex) {
+            assertThat(ex.getStatusCode()).isEqualTo(403);
+        }
     }
 
     /**
      * Server must handle head request
      */
     @Test
-    public void httpHeadRequestToBaseDirTest() throws IOException {
-        final Connection.Response response = client.url(BASE_URL).method(Connection.Method.HEAD).execute();
+    void httpHeadRequestToBaseDirTest() throws IOException {
+        final Connection.Response response = Jsoup.connect(BASE_URL).method(Connection.Method.HEAD).execute();
 
         final SoftAssertions softly = new SoftAssertions();
         softly.assertThat(response.statusCode()).isEqualTo(200);
@@ -63,8 +71,8 @@ public class BasicRequirementsAcceptanceTest {
      * Server should be able to handle sub directories and files with spaces
      */
     @Test
-    public void httpGetRequestToSubdirectoryWithSpacesTest() throws IOException {
-        final Connection.Response response = client.url(BASE_URL + "sub%20with%20space/and%20file.txt")
+    void httpGetRequestToSubdirectoryWithSpacesTest() throws IOException {
+        final Connection.Response response = Jsoup.connect(BASE_URL + "sub%20with%20space/and%20file.txt")
                 .method(Connection.Method.GET)
                 .execute();
 
@@ -75,8 +83,8 @@ public class BasicRequirementsAcceptanceTest {
     }
 
     @Test
-    public void httpGetRequestToJpgTest() throws IOException {
-        final Connection.Response response = client.url(BASE_URL + "subdirectory/hamburg.jpg")
+    void httpGetRequestToJpgTest() throws IOException {
+        final Connection.Response response = Jsoup.connect(BASE_URL + "subdirectory/hamburg.jpg")
                 .method(Connection.Method.GET)
                 .execute();
 
@@ -90,8 +98,8 @@ public class BasicRequirementsAcceptanceTest {
      * Server must handle get request and its is possible to discover subdirectories
      */
     @Test
-    public void httpGetToDirectoryWithIndexFileIsDisplayed() throws IOException {
-        final Connection.Response response = client.url(BASE_URL + "dirwithhtml").method(Connection.Method.GET).execute();
+    void httpGetToDirectoryWithIndexFileIsDisplayed() throws IOException {
+        final Connection.Response response = Jsoup.connect(BASE_URL + "dirwithhtml").method(Connection.Method.GET).execute();
 
         final SoftAssertions softly = new SoftAssertions();
         softly.assertThat(response.parse().select("h1").text()).isEqualTo("Welcome to the sample site");
@@ -103,11 +111,9 @@ public class BasicRequirementsAcceptanceTest {
      * Server must handle request to unknown files
      */
     @Test
-    public void httpGetRequestToUnknownFile() throws IOException {
+    void httpGetRequestToUnknownFile() throws IOException {
         try {
-            client.url(BASE_URL + "unknown")
-                    .method(Connection.Method.GET)
-                    .execute();
+            Jsoup.connect(BASE_URL + "unknown").method(Connection.Method.GET).execute();
 
             fail("jsoup should have thrown exception");
         } catch (org.jsoup.HttpStatusException ex) {

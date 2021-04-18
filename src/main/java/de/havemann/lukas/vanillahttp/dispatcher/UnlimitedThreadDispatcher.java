@@ -2,7 +2,8 @@ package de.havemann.lukas.vanillahttp.dispatcher;
 
 import de.havemann.lukas.vanillahttp.protocol.request.HttpRequest;
 import de.havemann.lukas.vanillahttp.protocol.request.HttpRequestBuffer;
-import de.havemann.lukas.vanillahttp.protocol.response.HttpResponseHeader;
+import de.havemann.lukas.vanillahttp.protocol.request.HttpRequestParsingException;
+import de.havemann.lukas.vanillahttp.protocol.response.HttpResponse;
 import de.havemann.lukas.vanillahttp.protocol.response.HttpResponseWriter;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpProtocol;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpStatusCode;
@@ -10,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.DurationUnit;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -27,24 +29,25 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
-@ConfigurationProperties("vanilla.server.http")
-public class UnlimitedThreadDispatcher implements ClientConnectionDispatcher {
+public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnlimitedThreadDispatcher.class);
 
     private final AtomicInteger id = new AtomicInteger(1);
     private final BeanFactory beanFactory;
 
-    @SuppressWarnings("FieldMayBeFinal")
-    @DurationUnit(ChronoUnit.SECONDS)
-    private Duration keepAliveTimeout = Duration.ofSeconds(10);
+    @DurationUnit(ChronoUnit.MILLIS)
+    @Value("${vanilla.server.http.keepAliveTimeout}")
+    private Duration keepAliveTimeout;
 
     public UnlimitedThreadDispatcher(@Autowired BeanFactory beanFactory) {
         this.beanFactory = Objects.requireNonNull(beanFactory);
     }
 
     public boolean dispatch(Socket clientSocket) {
-        new ClientConnectionHandlerThread(clientSocket).start();
+        final ClientConnectionHandlerThread clientConnectionHandlerThread = new ClientConnectionHandlerThread(clientSocket);
+        clientConnectionHandlerThread.setDaemon(true);
+        clientConnectionHandlerThread.start();
         return true;
     }
 
@@ -65,41 +68,76 @@ public class UnlimitedThreadDispatcher implements ClientConnectionDispatcher {
                 return;
             }
 
+            Optional<HttpRequest> httpRequest = Optional.empty();
             try {
                 while (!clientSocket.isClosed()) {
-                    Optional<HttpRequest> httpRequest = requestBuffer.readRequest();
-                    LOG.info("got request {}", httpRequest);
+                    // use http protocol form previous request as default
+                    final HttpResponse.Builder response = new HttpResponse.Builder()
+                            .protocol(httpRequest.map(HttpRequest::getHttpProtocol).orElse(HttpProtocol.HTTP_1));
 
-                    if (httpRequest.isEmpty()) {
-                        responseWriter.header(new HttpResponseHeader.Builder()
-                                .protocol(HttpProtocol.HTTP_1_1)
-                                .statusCode(HttpStatusCode.BAD_REQUEST))
-                                .finish();
-                        continue;
+                    try {
+                        httpRequest = requestBuffer.readRequest();
+                    } catch (HttpRequestParsingException ex) {
+                        LOG.error("parsing error", ex);
+                        responseWriter.write(response.statusCode(HttpStatusCode.BAD_REQUEST).build());
+                        break;
                     }
 
-                    clientRequestProcessor.processRequest(httpRequest.get());
+                    if (httpRequest.isEmpty()) {
+                        LOG.debug("empty line received");
+                        break;
+                    }
 
-                    if (!httpRequest.get().isKeepAlive()) {
+                    if (!handleRequest(httpRequest.get(), response)) {
+                        LOG.debug("close connection by header");
                         break;
                     }
                 }
             } catch (SocketTimeoutException socketTimeout) {
+                LOG.debug("socket timeout", socketTimeout);
                 try {
-                    responseWriter
-                            .header(new HttpResponseHeader.Builder().statusCode(HttpStatusCode.NOT_FOUND))
-                            .finish();
-
-                } catch (IOException e) {
-                    LOG.error("error during response", e);
+                    responseWriter.write(new HttpResponse.Builder()
+                            .protocol(httpRequest.map(HttpRequest::getHttpProtocol).orElse(HttpProtocol.HTTP_1))
+                            .statusCode(HttpStatusCode.REQUEST_TIMEOUT)
+                            .build());
+                } catch (Exception ex) {
+                    LOG.error("error during response", ex);
                 }
-            } catch (Exception e) {
-                LOG.error("error during handling of client: ", e);
+            } catch (SocketException ex) {
+                // on broken socket close everything
+                LOG.debug("socket exception occurred", ex);
+            } catch (Exception ex) {
+                LOG.error("error during handling of client: ", ex);
             } finally {
+                LOG.debug("client connection closed");
                 requestBuffer.close();
                 responseWriter.close();
                 close(clientSocket);
             }
+        }
+
+        private void log(HttpRequest httpRequest, HttpResponse httpResponse) {
+            LOG.info("{} request to uri={} header={} responding with {}",
+                    httpRequest.getHttpMethod(),
+                    httpRequest.getUri(),
+                    httpRequest.getHeader(),
+                    httpResponse.getStatusCode());
+        }
+
+        private boolean handleRequest(HttpRequest request, HttpResponse.Builder responseBuilder) throws Exception {
+            clientRequestProcessor.processRequest(request, responseBuilder);
+
+            final boolean shouldBeKeptAlive = request.getHttpProtocol() == HttpProtocol.HTTP_1_1 && !request.getHeader().isConnectionClose();
+            if (shouldBeKeptAlive) {
+                responseBuilder.keepAliveFor(keepAliveTimeout);
+            }
+
+            responseBuilder.protocol(request.getHttpProtocol());
+
+            final HttpResponse response = responseBuilder.build();
+            log(request, response);
+            responseWriter.write(response);
+            return shouldBeKeptAlive;
         }
 
         private boolean setupReaderAndWriter() {
@@ -113,7 +151,8 @@ public class UnlimitedThreadDispatcher implements ClientConnectionDispatcher {
                 responseWriter = new HttpResponseWriter(outputStream);
                 requestBuffer = new HttpRequestBuffer(inputStream);
 
-                clientRequestProcessor = beanFactory.getBean(ClientRequestProcessor.class, responseWriter);
+                clientRequestProcessor = beanFactory.getBean(ClientRequestProcessor.class);
+
                 return true;
             } catch (IOException e) {
                 LOG.error("setup of reader and writer failed", e);
