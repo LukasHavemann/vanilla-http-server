@@ -40,7 +40,7 @@ public class ConnectionAcceptorService {
 
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        bindAcceptingP();
+        bindAcceptingSocket();
 
         LOG.info("start excepting client connections");
 
@@ -50,7 +50,7 @@ public class ConnectionAcceptorService {
         acceptorThread.start();
     }
 
-    private void bindAcceptingP() {
+    private void bindAcceptingSocket() {
         try {
             acceptingSocket = new ServerSocket(port, backlog, InetAddress.getByName(host));
             acceptingSocket.setSoTimeout((int) ACCEPTOR_THREAD_TIMEOUT.toMillis());

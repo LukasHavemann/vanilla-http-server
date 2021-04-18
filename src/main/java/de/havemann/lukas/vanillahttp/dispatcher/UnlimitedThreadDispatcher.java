@@ -117,7 +117,8 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
         }
 
         private void log(HttpRequest httpRequest, HttpResponse httpResponse) {
-            LOG.info("{} request to uri={} header={} responding with {}",
+            LOG.info("{} {} request to uri={} header={} responding with {}",
+                    httpRequest.getHttpProtocol(),
                     httpRequest.getHttpMethod(),
                     httpRequest.getUri(),
                     httpRequest.getHeader(),

@@ -58,7 +58,7 @@ public class HttpRequestParser {
 
         final HttpMethod httpMethod = ProtocolRepresentation.detect(HttpMethod.class, currentToken);
         if (httpMethod == null) {
-            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_METHOD.toException();
+            throw HttpRequestParsingException.Reason.UNSUPPORTED_HTTP_METHOD.toException(currentToken);
         }
 
         requestBuilder.httpMethod(httpMethod);
