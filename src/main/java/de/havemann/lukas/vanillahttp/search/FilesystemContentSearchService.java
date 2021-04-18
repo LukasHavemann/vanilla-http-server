@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
 import org.springframework.util.unit.DataUnit;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -33,6 +34,12 @@ class FilesystemContentSearchService implements ContentSearchService {
 
     @Value("${vanilla.server.filesystem.basedir}")
     private String basedir;
+    private Path baseDirPath;
+
+    @PostConstruct
+    public void init() {
+        baseDirPath = new File(basedir).toPath().toAbsolutePath().normalize();
+    }
 
     public Response fetch(String uri) {
         try {
@@ -65,13 +72,13 @@ class FilesystemContentSearchService implements ContentSearchService {
 
     private boolean isInsideBaseDir(File file) {
         final Path requestedPath = file.toPath().toAbsolutePath().normalize();
-        final Path baseDir = new File(basedir).toPath().toAbsolutePath().normalize();
-        return requestedPath.startsWith(baseDir);
+        return requestedPath.startsWith(baseDirPath);
     }
 
     private byte[] renderDirectoryPage(File file) throws IOException {
         final ByteArrayOutputStream byteData = new ByteArrayOutputStream();
-        new DirectoryHtmlPage(file, byteData).render();
+        final String directoryname = "/" + baseDirPath.relativize(file.toPath().normalize().toAbsolutePath()).toString();
+        new DirectoryHtmlPage(directoryname, file, byteData).render();
         return byteData.toByteArray();
     }
 

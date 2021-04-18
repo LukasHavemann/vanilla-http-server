@@ -30,10 +30,9 @@ public class DirectoryHtmlPage {
     private final OutputStream outputStream;
     private final File directory;
 
-    public DirectoryHtmlPage(File directory, OutputStream outputStream) {
-        // TODO: 17.04.21 relative
-        this.directory = directory;
-        this.directoryName = Objects.requireNonNull(directory.getAbsolutePath());
+    public DirectoryHtmlPage(String directoryName, File directory, OutputStream outputStream) {
+        this.directoryName = Objects.requireNonNull(directoryName);
+        this.directory = Objects.requireNonNull(directory);
         this.outputStream = Objects.requireNonNull(outputStream);
     }
 
@@ -46,7 +45,9 @@ public class DirectoryHtmlPage {
     private void renderFiles() throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath())) {
             for (Path path : stream) {
-                outputStream.write(renderListElement(getFilename(path)));
+                if (path.toFile().canRead()) {
+                    outputStream.write(renderListElement(getFilename(path)));
+                }
             }
         }
     }
