@@ -45,6 +45,21 @@ class Extension1AcceptanceTest {
     }
 
     @Test
+    void ifLastModifiedIsRespectedOnHeadRequestTooTest() throws IOException {
+        final Connection connection = Jsoup.connect(BASE_URL + "fileonfirstlevel.txt").method(Connection.Method.HEAD);
+        final Connection.Response firstResponse = connection.execute();
+        final String firstResponseLastModified = firstResponse.header(HttpHeaderField.LAST_MODIFIED.getRepresentation());
+
+        assertThat(firstResponse.statusCode()).isEqualTo(HttpStatusCode.OK.getCode());
+
+        final Connection.Response secondResponse = connection
+                .header(HttpHeaderField.IF_MODIFIED_SINCE.getRepresentation(), firstResponseLastModified)
+                .execute();
+
+        assertThat(secondResponse.statusCode()).isEqualTo(HttpStatusCode.NOT_MODIFIED.getCode());
+    }
+
+    @Test
     void oldLastModifiedTest() throws IOException {
         final Connection connection = Jsoup.connect(BASE_URL + "fileonfirstlevel.txt").method(Connection.Method.GET);
         final Connection.Response firstResponse = connection.execute();

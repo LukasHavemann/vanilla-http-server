@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BasicRequirementsAcceptanceTest {
 
-    public static final String BASE_URL = "http://localhost:9999/";
+    private static final String BASE_URL = "http://localhost:9999/";
 
     /**
      * Server must handle get request and its is possible to discover subdirectories

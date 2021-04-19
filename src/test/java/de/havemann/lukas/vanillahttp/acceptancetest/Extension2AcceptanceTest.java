@@ -2,6 +2,8 @@ package de.havemann.lukas.vanillahttp.acceptancetest;
 
 import de.havemann.lukas.vanillahttp.VanillaHttpServer;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpStatusCode;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +14,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
@@ -26,55 +29,77 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Extension2AcceptanceTest {
 
+    private SimpleHttpTestClient client;
+
+    @BeforeEach
+    void beforeEach() {
+        client = new SimpleHttpTestClient(9997);
+    }
+
+    @AfterEach
+    void afterEach() throws IOException {
+        if (client != null) {
+            client.close();
+        }
+    }
+
     @Test
     void connectionStaysOpen() throws IOException {
-        final HttpTestClient httpTestClient = new HttpTestClient(9997);
-
-        assertThat(httpTestClient.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
-        assertThat(httpTestClient.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
-
-        httpTestClient.close();
+        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
+        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
+        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
     }
 
     @Test
-    void connectionClosesAfterClientTimeoutOpen() throws IOException, InterruptedException {
-        final HttpTestClient httpTestClient = new HttpTestClient(9997);
-
-        assertThat(httpTestClient.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
+    void connectionClosesAfterClientTimeout() throws IOException, InterruptedException {
+        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
         TimeUnit.SECONDS.sleep(1);
-        assertThat(httpTestClient.readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
-
-        httpTestClient.close();
+        assertThat(client.readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
     }
 
     @Test
-    void handelsInvalidHttpGracefull() throws IOException {
-        final HttpTestClient httpTestClient = new HttpTestClient(9997);
-
-        assertThat(httpTestClient.sendGarbageRequest().readResponse()).contains(HttpStatusCode.BAD_REQUEST.getRepresentation());
-
-        httpTestClient.close();
+    void handlesInvalidHttpGraceful() throws IOException {
+        assertThat(client.send("HEAD / GarbageHTTP/1.1").readResponse()).contains(HttpStatusCode.BAD_REQUEST.getRepresentation());
     }
 
-    static class HttpTestClient {
+    @Test
+    void handlesHttp1Correctly() throws IOException {
+        assertThat(client.send("HEAD / HTTP/1.0").readResponse()).contains(HttpStatusCode.OK.getRepresentation());
+        try {
+            assertThat(client.send("HEAD / HTTP/1.0").readResponse()).isEqualTo("");
+        } catch (SocketException ignored) {
+        }
+    }
 
-        private final Socket clientSocket;
-        private final DataOutputStream dataOutputStream;
-        private final BufferedReader reader;
+    static class SimpleHttpTestClient {
 
-        public HttpTestClient(int port) throws IOException {
+        private final int port;
+        private Socket clientSocket;
+        private DataOutputStream dataOutputStream;
+        private BufferedReader reader;
+
+        public SimpleHttpTestClient(int port) {
+            this.port = port;
+        }
+
+        private void initSocket() throws IOException {
+            if (clientSocket != null) {
+                return;
+            }
+
             this.clientSocket = new Socket("127.0.0.1", port);
             dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         }
 
-        public HttpTestClient sendHeadRequest() throws IOException {
-            dataOutputStream.write("HEAD / HTTP/1.1\r\n\r\n".getBytes(StandardCharsets.UTF_8));
-            return this;
+        public SimpleHttpTestClient sendHeadRequest() throws IOException {
+            return send("HEAD / HTTP/1.1");
         }
 
-        public HttpTestClient sendGarbageRequest() throws IOException {
-            dataOutputStream.write("HEAD / GarbageHTTP/1.1\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+        public SimpleHttpTestClient send(String string) throws IOException {
+            initSocket();
+            dataOutputStream.write((string + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            dataOutputStream.flush();
             return this;
         }
 
@@ -84,7 +109,6 @@ class Extension2AcceptanceTest {
             while ((line = reader.readLine()) != null && !line.isBlank()) {
                 builder.append(line).append("\r\n");
             }
-
             return builder.toString();
         }
 

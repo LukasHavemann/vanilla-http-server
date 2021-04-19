@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+/**
+ * Service for searching and loading content.
+ */
 public interface ContentSearchService {
 
     /**
@@ -20,20 +23,29 @@ public interface ContentSearchService {
 
     interface Response {
 
+        /**
+         * Result of executed search operation
+         */
         Result getResult();
 
         Optional<MediaType> getMediaType();
 
+        /**
+         * Opens stream to found resource
+         */
         Optional<InputStream> getInputStream() throws IOException;
 
         /**
          * Return Hash-Value of found resource. Call to method may lead to load of resource into memory depending on
-         * implementation of search-service
+         * specific implementation
          *
-         * @return calculated hash value
+         * @return hash value from found resource
          */
         Optional<byte[]> getHash() throws IOException;
 
+        /**
+         * @return last modification date
+         */
         Optional<ZonedDateTime> getLastModified();
     }
 
