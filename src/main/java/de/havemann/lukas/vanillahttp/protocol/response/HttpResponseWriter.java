@@ -27,7 +27,7 @@ public class HttpResponseWriter implements Closeable {
 
     /**
      * @param outputStream stream to write http protocol output to
-     * @param bufferSize   buffer size for chunked encoding
+     * @param bufferSize   buffer size for chunked encoding in bytes
      */
     public HttpResponseWriter(OutputStream outputStream, int bufferSize) {
         this.outputStream = Objects.requireNonNull(outputStream);

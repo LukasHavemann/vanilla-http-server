@@ -12,8 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.boot.convert.DurationUnit;
 import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
+import org.springframework.util.unit.DataUnit;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -40,6 +43,10 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
     @DurationUnit(ChronoUnit.MILLIS)
     @Value("${vanilla.server.http.keepAliveTimeout}")
     private Duration keepAliveTimeout;
+
+    @DataSizeUnit(DataUnit.BYTES)
+    @Value("${vanilla.server.http.chunkedEncodingBufferSize}")
+    private DataSize chunkedEncodingBufferSize;
 
     public UnlimitedThreadDispatcher(@Autowired BeanFactory beanFactory) {
         this.beanFactory = Objects.requireNonNull(beanFactory);
@@ -153,7 +160,7 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
                 inputStream = clientSocket.getInputStream();
                 outputStream = clientSocket.getOutputStream();
 
-                responseWriter = new HttpResponseWriter(outputStream);
+                responseWriter = new HttpResponseWriter(outputStream, (int) chunkedEncodingBufferSize.toBytes());
                 requestBuffer = new HttpRequestBuffer(inputStream);
 
                 clientRequestProcessor = beanFactory.getBean(ClientRequestProcessor.class);

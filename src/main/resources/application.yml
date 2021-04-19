@@ -8,6 +8,7 @@ vanilla:
       basedir: "./src/test/resources/sampledirectory"
     http:
       keepAliveTimeout: 10s
+      chunkedEncodingBufferSize: 255B
 
 logging:
   level:
