@@ -43,28 +43,16 @@ public class SearchServiceRequestProcessor implements ClientRequestProcessor {
     }
 
     private void handleFoundSearchResult(HttpRequest request, ContentSearchService.Response searchResponse, HttpResponse.Builder builder) throws IOException {
-        builder.statusCode(searchResponse.getResult().getDefaultHttpCode())
-                .contentType(searchResponse.getMediaType().orElse(MediaType.UNKNOWN));
-
-        final Optional<ZonedDateTime> lastModified = searchResponse.getLastModified();
-        final Optional<ETag> eTag = searchResponse.getHash().map(hash -> new ETag(hash, ETag.Kind.STRONG));
-
-        lastModified.ifPresent(builder::lastModified);
-        eTag.ifPresent(builder::eTag);
-
+        final boolean shouldContentBeSend = prepareHttpHeader(request, searchResponse, builder);
 
         if (request.getHttpMethod() == HttpMethod.HEAD) {
             return;
         }
 
         if (request.getHttpMethod() == HttpMethod.GET) {
-            final boolean shouldContentBeSend = new ETagEvaluator(request.getHeader())
-                    .shouldContentBeSend(eTag.orElse(null), lastModified.orElse(null));
-
             if (shouldContentBeSend) {
-                builder.payloadRenderer(() -> searchResponse.getInputStream().orElseThrow(() -> new IllegalStateException(searchResponse.toString())));
-            } else {
-                builder.statusCode(HttpStatusCode.NOT_MODIFIED);
+                builder.payloadRenderer(() -> searchResponse.getInputStream()
+                        .orElseThrow(() -> new IllegalStateException(searchResponse.toString())));
             }
             return;
         }
@@ -73,5 +61,24 @@ public class SearchServiceRequestProcessor implements ClientRequestProcessor {
         LOG.error("request not handled {}", request, new IllegalStateException("unhandled request"));
 
         builder.statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR);
+    }
+
+    private boolean prepareHttpHeader(HttpRequest request, ContentSearchService.Response searchResponse, HttpResponse.Builder builder) throws IOException {
+        final Optional<ZonedDateTime> lastModified = searchResponse.getLastModified();
+        final Optional<ETag> eTag = searchResponse.getHash().map(hash -> new ETag(hash, ETag.Kind.STRONG));
+
+        builder.statusCode(searchResponse.getResult().getDefaultHttpCode());
+        builder.contentType(searchResponse.getMediaType().orElse(MediaType.UNKNOWN));
+        lastModified.ifPresent(builder::lastModified);
+        eTag.ifPresent(builder::eTag);
+
+        boolean shouldContentBeSend = new ETagEvaluator(request.getHeader())
+                .shouldContentBeSend(eTag.orElse(null), lastModified.orElse(null));
+
+        if (!shouldContentBeSend) {
+            builder.statusCode(HttpStatusCode.NOT_MODIFIED);
+        }
+
+        return shouldContentBeSend;
     }
 }

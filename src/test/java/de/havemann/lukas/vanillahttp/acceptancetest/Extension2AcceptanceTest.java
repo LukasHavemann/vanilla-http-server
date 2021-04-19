@@ -71,7 +71,6 @@ class Extension2AcceptanceTest {
             assertThat(client.send("HEAD / HTTP/1.0").readResponse()).isEqualTo("");
             fail("http 1 does not support persistent connection. connection should be closed");
         } catch (SocketException ignored) {
-
         }
     }
 
