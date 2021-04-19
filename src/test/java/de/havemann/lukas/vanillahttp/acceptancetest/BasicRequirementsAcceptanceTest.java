@@ -18,6 +18,13 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * Testing the fulfilment of the following requirements:
+ * <p>
+ * The server should serve static files and directories from a user-specified root directory.
+ * - It should be possible to discover subdirectories as well.
+ * - The server must at least handle HTTP GET and HEAD requests.
+ */
 @SpringBootTest(classes = VanillaHttpServer.class)
 @TestPropertySource(properties = {
         "vanilla.server.port=9999",

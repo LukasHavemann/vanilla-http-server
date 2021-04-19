@@ -20,6 +20,12 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Testing the fulfilment of the following requirements:
+ * <p>
+ * Add proper HTTP/1.1 keep-alive behavior to your implementation based on the http-client's
+ * capabilities exposed through its request headers.
+ */
 @SpringBootTest(classes = VanillaHttpServer.class)
 @TestPropertySource(properties = {
         "vanilla.server.port=9997",

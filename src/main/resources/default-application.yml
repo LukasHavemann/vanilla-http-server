@@ -1,0 +1,17 @@
+# defautl application properties for docker container
+vanilla:
+  server:
+    port: 8080
+    backlog: 50
+    host: 0.0.0.0
+    filesystem:
+      # max filesize of files which are loaded and kept in memory during ETag generation
+      maxInMemory: 50MB
+      basedir: "/basedir"
+    http:
+      keepAliveTimeout: 15s
+      chunkedEncodingBufferSize: 1KB
+
+logging:
+  level:
+    root: INFO
