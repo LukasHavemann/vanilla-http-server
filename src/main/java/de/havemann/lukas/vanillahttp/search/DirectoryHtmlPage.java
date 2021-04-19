@@ -61,6 +61,6 @@ public class DirectoryHtmlPage {
     }
 
     private byte[] renderListElement(String file) {
-        return "<li><a href=\"#file\">#file</a>".replaceAll("#file", file).getBytes(StandardCharsets.UTF_8);
+        return "<li><a href=\"#file\">#file</a>\n".replaceAll("#file", file).getBytes(StandardCharsets.UTF_8);
     }
 }

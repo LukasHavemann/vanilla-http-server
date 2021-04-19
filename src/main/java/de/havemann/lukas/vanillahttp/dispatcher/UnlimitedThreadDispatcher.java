@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnlimitedThreadDispatcher.class);
+    public static final HttpProtocol DEFAULT_HTTP_PROTOCOL = HttpProtocol.HTTP_1_1;
 
     private final AtomicInteger id = new AtomicInteger(1);
     private final BeanFactory beanFactory;
@@ -72,8 +73,8 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
             try {
                 while (!clientSocket.isClosed()) {
                     // use http protocol form previous request as default
-                    final HttpResponse.Builder response = new HttpResponse.Builder()
-                            .protocol(httpRequest.map(HttpRequest::getHttpProtocol).orElse(HttpProtocol.HTTP_1));
+                    final HttpProtocol protocol = httpRequest.map(HttpRequest::getHttpProtocol).orElse(DEFAULT_HTTP_PROTOCOL);
+                    final HttpResponse.Builder response = new HttpResponse.Builder(protocol);
 
                     try {
                         httpRequest = requestBuffer.readRequest();
@@ -95,13 +96,8 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
                 }
             } catch (SocketTimeoutException socketTimeout) {
                 LOG.debug("socket timeout", socketTimeout);
-                try {
-                    responseWriter.write(new HttpResponse.Builder()
-                            .protocol(httpRequest.map(HttpRequest::getHttpProtocol).orElse(HttpProtocol.HTTP_1))
-                            .statusCode(HttpStatusCode.REQUEST_TIMEOUT)
-                            .build());
-                } catch (Exception ex) {
-                    LOG.error("error during response", ex);
+                if (httpRequest.map(HttpRequest::getHttpProtocol).orElse(HttpProtocol.HTTP_1) == HttpProtocol.HTTP_1_1) {
+                    respondWithTimeout();
                 }
             } catch (SocketException ex) {
                 // on broken socket close everything
@@ -113,6 +109,16 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
                 requestBuffer.close();
                 responseWriter.close();
                 close(clientSocket);
+            }
+        }
+
+        private void respondWithTimeout() {
+            try {
+                responseWriter.write(new HttpResponse.Builder(HttpProtocol.HTTP_1_1)
+                        .statusCode(HttpStatusCode.REQUEST_TIMEOUT)
+                        .build());
+            } catch (Exception ex) {
+                LOG.error("error during response", ex);
             }
         }
 
@@ -132,8 +138,6 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
             if (shouldBeKeptAlive) {
                 responseBuilder.keepAliveFor(keepAliveTimeout);
             }
-
-            responseBuilder.protocol(request.getHttpProtocol());
 
             final HttpResponse response = responseBuilder.build();
             log(request, response);

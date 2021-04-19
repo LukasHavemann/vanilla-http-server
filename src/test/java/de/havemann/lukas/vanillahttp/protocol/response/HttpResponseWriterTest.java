@@ -3,6 +3,7 @@ package de.havemann.lukas.vanillahttp.protocol.response;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpProtocol;
 import de.havemann.lukas.vanillahttp.protocol.specification.HttpStatusCode;
 import de.havemann.lukas.vanillahttp.protocol.specification.etag.ETag;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +35,13 @@ class HttpResponseWriterTest {
             "",
             "");
 
+    private static final String EXPECTED_HTTP1_RESPONSE = String.join(HttpProtocol.DELIMITER,
+            "HTTP/1.0 200 OK",
+            "",
+            "Hello World!",
+            "",
+            "");
+
     private static final String EXPECTED_NO_CONTENT_RESPONSE = String.join(HttpProtocol.DELIMITER,
             "HTTP/1.1 200 OK",
             "Connection: keep-alive",
@@ -41,26 +49,30 @@ class HttpResponseWriterTest {
             "",
             "");
 
+    private ByteArrayOutputStream actual;
+    private HttpResponseWriter testee;
+
+    @BeforeEach
+    void beforeEach() {
+        actual = new ByteArrayOutputStream();
+        testee = new HttpResponseWriter(actual);
+    }
+
     @Test
     void httpResponseOkWriterTest() throws Exception {
-        final HttpResponse responseHeader = new HttpResponse.Builder()
-                .protocol(HttpProtocol.HTTP_1_1)
+        final HttpResponse responseHeader = new HttpResponse.Builder(HttpProtocol.HTTP_1_1)
                 .statusCode(HttpStatusCode.OK)
                 .keepAliveFor(Duration.ofSeconds(10))
                 .build();
 
-        final ByteArrayOutputStream actual = new ByteArrayOutputStream();
-
-        // Act
-        new HttpResponseWriter(actual).write(responseHeader);
+        testee.write(responseHeader);
 
         assertThat(actual.toString(StandardCharsets.UTF_8)).isEqualTo(EXPECTED_NO_CONTENT_RESPONSE);
     }
 
     @Test
     void httpResponseWithChunkedEncodingWriterTest() throws Exception {
-        final HttpResponse responseHeader = new HttpResponse.Builder()
-                .protocol(HttpProtocol.HTTP_1_1)
+        final HttpResponse responseHeader = new HttpResponse.Builder(HttpProtocol.HTTP_1_1)
                 .statusCode(HttpStatusCode.OK)
                 .keepAliveFor(Duration.ofSeconds(10))
                 .eTag(new ETag("SOMETHING", ETag.Kind.STRONG))
@@ -68,11 +80,20 @@ class HttpResponseWriterTest {
                 .payloadRenderer(() -> new ByteArrayInputStream("Hello World!".getBytes(StandardCharsets.UTF_8)))
                 .build();
 
-        final ByteArrayOutputStream actual = new ByteArrayOutputStream();
-
-        // Act
-        new HttpResponseWriter(actual).write(responseHeader);
+        testee.write(responseHeader);
 
         assertThat(actual.toString(StandardCharsets.UTF_8)).isEqualTo(EXPECTED_CHUNKED_RESPONSE);
+    }
+
+    @Test
+    void http1ResponseWriterTest() throws Exception {
+        final HttpResponse responseHeader = new HttpResponse.Builder(HttpProtocol.HTTP_1)
+                .statusCode(HttpStatusCode.OK)
+                .payloadRenderer(() -> new ByteArrayInputStream("Hello World!".getBytes(StandardCharsets.UTF_8)))
+                .build();
+
+        testee.write(responseHeader);
+
+        assertThat(actual.toString(StandardCharsets.UTF_8)).isEqualTo(EXPECTED_HTTP1_RESPONSE);
     }
 }

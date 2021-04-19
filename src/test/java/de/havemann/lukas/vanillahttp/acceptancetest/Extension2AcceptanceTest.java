@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest(classes = VanillaHttpServer.class)
 @TestPropertySource(properties = {
@@ -33,12 +32,12 @@ class Extension2AcceptanceTest {
     private SimpleHttpTestClient client;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         client = new SimpleHttpTestClient(9997);
     }
 
     @AfterEach
-    public void aferEach() throws IOException {
+    void afterEach() throws IOException {
         if (client != null) {
             client.close();
         }
@@ -68,8 +67,6 @@ class Extension2AcceptanceTest {
         assertThat(client.send("HEAD / HTTP/1.0").readResponse()).contains(HttpStatusCode.OK.getRepresentation());
         try {
             assertThat(client.send("HEAD / HTTP/1.0").readResponse()).isEqualTo("");
-            assertThat(client.send("HEAD / HTTP/1.0").readResponse()).isEqualTo("");
-            fail("http 1 does not support persistent connection. connection should be closed");
         } catch (SocketException ignored) {
         }
     }

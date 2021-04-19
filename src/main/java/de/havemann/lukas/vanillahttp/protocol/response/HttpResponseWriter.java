@@ -94,6 +94,8 @@ public class HttpResponseWriter implements Closeable {
     }
 
     private void selectByProtocol(HttpProtocol protocol, InputStream inputStream) throws IOException {
+        writeCRLF();
+
         if (protocol == HttpProtocol.HTTP_1) {
             inputStream.transferTo(outputStream);
             writeCRLF();
@@ -103,7 +105,6 @@ public class HttpResponseWriter implements Closeable {
         if (protocol == HttpProtocol.HTTP_1_1) {
             writeOutChunked(inputStream);
             writeFinalByte();
-            writeCRLF();
             return;
         }
 

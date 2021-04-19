@@ -47,13 +47,12 @@ public class HttpResponse {
     @SuppressWarnings("UnusedReturnValue")
     public static class Builder {
         private final List<Pair<HttpHeaderField, String>> headerFields = new ArrayList<>();
-        private HttpProtocol protocol;
+        private final HttpProtocol protocol;
         private HttpStatusCode statusCode;
         private Callable<InputStream> payloadRenderer;
 
-        public Builder protocol(HttpProtocol protocol) {
-            this.protocol = protocol;
-            return this;
+        public Builder(HttpProtocol protocol) {
+            this.protocol = Objects.requireNonNull(protocol);
         }
 
         public Builder statusCode(HttpStatusCode statusCode) {
@@ -67,8 +66,6 @@ public class HttpResponse {
         }
 
         public Builder keepAliveFor(Duration duration) {
-            // keep alive requires HTTP/1.1
-            protocol(HttpProtocol.HTTP_1_1);
             add(HttpHeaderField.CONNECTION, "keep-alive");
             add(HttpHeaderField.KEEP_ALIVE, "timeout=" + duration.getSeconds());
             return this;
@@ -90,7 +87,9 @@ public class HttpResponse {
         }
 
         public Builder payloadRenderer(Callable<InputStream> payloadRenderer) {
-            add(HttpHeaderField.TRANSFER_ENCODING, "chunked");
+            if (protocol == HttpProtocol.HTTP_1_1) {
+                add(HttpHeaderField.TRANSFER_ENCODING, "chunked");
+            }
             this.payloadRenderer = payloadRenderer;
             return this;
         }
