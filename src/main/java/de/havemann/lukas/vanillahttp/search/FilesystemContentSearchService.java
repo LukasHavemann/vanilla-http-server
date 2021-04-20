@@ -160,7 +160,11 @@ class FilesystemContentSearchService implements ContentSearchService {
         @NotNull
         private Optional<byte[]> loadFileIntoMemoryAndCalculateHash() throws IOException {
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            this.inputStream.transferTo(outputStream);
+
+            try (InputStream toStream = this.inputStream) {
+                toStream.transferTo(outputStream);
+            }
+
             final byte[] buffer = outputStream.toByteArray();
             // replace inputstream with In-Memory to prevent double load
             this.inputStream = new ByteArrayInputStream(buffer);
