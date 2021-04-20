@@ -3,6 +3,11 @@ name: Java CI
 on:
   push:
     branches:
+      - 'bug/*'
+      - 'feature/*'
+  pull_request:
+    branches:
+      - 'bug/*'
       - 'feature/*'
 
 jobs:

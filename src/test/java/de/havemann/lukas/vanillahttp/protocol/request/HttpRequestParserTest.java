@@ -35,7 +35,7 @@ class HttpRequestParserTest {
         softly.assertThat(actual.getHttpMethod()).isEqualTo(HttpMethod.GET);
         softly.assertThat(actual.getHttpProtocol()).isEqualTo(HttpProtocol.HTTP_1_1);
         softly.assertThat(actual.getUri()).isEqualTo("/");
-        softly.assertThat(actual.getHeader().getAll()).containsKey("Content-Type").hasSize(5);
+        softly.assertThat(actual.getHeader().getAll()).containsKey("Contet-Type").hasSize(5);
         softly.assertThat(actual.getHeader().getValueOf(HttpHeaderField.CONNECTION)).isNotEmpty();
         softly.assertThat(actual.getMessageBody()).isEmpty();
 
