@@ -102,7 +102,7 @@ class Extension1AcceptanceTest {
 
 
     @Test
-    void eTagShoudHavePrecedenceBeforeLastModifiedTest() throws IOException {
+    void eTagShouldHavePrecedenceBeforeLastModifiedTest() throws IOException {
         final Connection connection = Jsoup.connect(BASE_URL + "fileonfirstlevel.txt").method(Connection.Method.GET);
         final Connection.Response firstResponse = connection.execute();
         final String firstResponseEtag = firstResponse.header(HttpHeaderField.E_TAG.getRepresentation());

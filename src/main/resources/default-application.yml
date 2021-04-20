@@ -1,4 +1,4 @@
-# defautl application properties for docker container
+# default application properties for docker container
 vanilla:
   server:
     port: 8080

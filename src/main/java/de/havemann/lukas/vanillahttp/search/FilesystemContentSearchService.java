@@ -77,8 +77,8 @@ class FilesystemContentSearchService implements ContentSearchService {
 
     private byte[] renderDirectoryPage(File file) throws IOException {
         final ByteArrayOutputStream byteData = new ByteArrayOutputStream();
-        final String directoryname = "/" + baseDirPath.relativize(file.toPath().normalize().toAbsolutePath()).toString();
-        new DirectoryHtmlPage(directoryname, file, byteData).render();
+        final String directoryName = "/" + baseDirPath.relativize(file.toPath().normalize().toAbsolutePath()).toString();
+        new DirectoryHtmlPage(directoryName, file, byteData).render();
         return byteData.toByteArray();
     }
 
@@ -160,9 +160,13 @@ class FilesystemContentSearchService implements ContentSearchService {
         @NotNull
         private Optional<byte[]> loadFileIntoMemoryAndCalculateHash() throws IOException {
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            this.inputStream.transferTo(outputStream);
+
+            try (InputStream toStream = this.inputStream) {
+                toStream.transferTo(outputStream);
+            }
+
             final byte[] buffer = outputStream.toByteArray();
-            // replace inputstream with In-Memory to prevent double load
+            // replace inputStream with In-Memory to prevent double load
             this.inputStream = new ByteArrayInputStream(buffer);
             return Optional.of(getMessageDigest().digest(buffer));
         }

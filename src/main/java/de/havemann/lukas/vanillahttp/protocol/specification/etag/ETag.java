@@ -130,7 +130,7 @@ public class ETag implements ProtocolRepresentation {
         }
 
         /**
-         * Compares ETag according to <a href=https://tools.ietf.org/html/rfc7232#section-2.3.2">comparsion strategy</a>
+         * Compares ETag according to <a href=https://tools.ietf.org/html/rfc7232#section-2.3.2">comparison strategy</a>
          * <p>
          * +--------+--------+-------------------+-----------------+
          * | ETag 1 | ETag 2 | Strong Comparison | Weak Comparison |

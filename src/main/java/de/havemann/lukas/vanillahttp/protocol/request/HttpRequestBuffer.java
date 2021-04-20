@@ -36,9 +36,7 @@ public class HttpRequestBuffer implements Closeable {
         try {
             return Optional.of(new HttpRequestParser(httpRequest).parse());
         } catch (HttpRequestParsingException ex) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("Can't parse http request. got " + buffer, ex);
-            }
+            LOG.error("Can't parse http request. got " + buffer, ex);
             throw ex;
         }
     }
