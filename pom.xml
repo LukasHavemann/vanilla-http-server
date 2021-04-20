@@ -8,9 +8,13 @@
     <artifactId>vanilla-http-server</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <name>vanilla-http-server</name>
+    <description>simple but function http server implementation</description>
+
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <junit-platform.version>5.3.1</junit-platform.version>
     </properties>
 
     <parent>
@@ -69,10 +73,16 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>io.gatling</groupId>
                 <artifactId>gatling-maven-plugin</artifactId>
                 <version>3.1.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
             </plugin>
         </plugins>
     </build>
@@ -106,13 +116,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.1</version>
+            <version>${junit-platform.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.1</version>
+            <version>${junit-platform.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
