@@ -115,7 +115,7 @@ class Extension1AcceptanceTest {
                         DateTimeFormatter.RFC_1123_DATE_TIME.format(LAST_MODIFIED_OF_TEST_FILE.plusDays(10)))
                 .execute();
 
-        assertThat(secondResponse.statusCode()).isEqualTo(HttpStatusCode.OK.getCode());
+        assertThat(secondResponse.statusCode()).isEqualTo(HttpStatusCode.NOT_MODIFIED.getCode());
     }
 
     @Test

@@ -7,7 +7,7 @@ java. [Why vanilla?](https://thisinterestsme.com/vanilla-javascript/)
 
 The vanilla-http-server is available as a docker image
 on [DockerHub](https://hub.docker.com/repository/docker/lukashavemann/vanilla-http-server) and can be started with the
-following command. After startup the container will start serving files form a sample directory inside the docker image
+following command. After startup the container will start serving files from a sample directory inside the docker image
 on `localhost:8080`.
 
 ```
@@ -40,7 +40,7 @@ docker run -d \
 The vanilla-http-server uses spring boot starter for dependency injection and configuration management. The web context
 of spring boot **[is disabled](src/main/java/de/havemann/lukas/vanillahttp/VanillaHttpServer.java)**.
 The [http protocol](src/main/java/de/havemann/lukas/vanillahttp/protocol)
-implementation was built from. The html testing framework [jsoup](https://jsoup.org) is used for automated acceptance
+implementation was built from scratch. The html testing framework [jsoup](https://jsoup.org) is used for automated acceptance
 testing.
 
 ## :house: Architecture
@@ -122,13 +122,6 @@ intelligent  [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillah
 ![Distribution of response times](doc/histograms.png)
 
 ## :hammer: Development, Build & Pipeline
-
-To build and run the project locally.
-
-```
-mvn clean package
-java -jar target/vanilla-http-server-1.0-SNAPSHOT.jar
-```
 
 For local analyzing and debugging of the http protocol implementation [Wireshark](https://www.wireshark.org/) was used.
 
