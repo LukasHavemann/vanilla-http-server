@@ -19,6 +19,6 @@ jobs:
           java-version: '14'
           distribution: 'adopt'
       - name: Get Maven Version
-        run: mvn version
+        run: mvn --version
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
