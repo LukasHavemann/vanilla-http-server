@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -35,7 +37,10 @@ public class SearchServiceRequestProcessor implements ClientRequestProcessor {
         final ContentSearchService.Response searchResponse = contentSearchService.fetch(request.getUri());
 
         if (searchResponse.getResult() != ContentSearchService.Result.FOUND) {
-            response.statusCode(searchResponse.getResult().getDefaultHttpCode());
+            final HttpStatusCode defaultHttpCode = searchResponse.getResult().getDefaultHttpCode();
+            response.statusCode(defaultHttpCode)
+                    .contentType(MediaType.ASCII_TEXT)
+                    .payloadRenderer(() -> new ByteArrayInputStream(defaultHttpCode.getRepresentation().getBytes(StandardCharsets.UTF_8)));
             return;
         }
 

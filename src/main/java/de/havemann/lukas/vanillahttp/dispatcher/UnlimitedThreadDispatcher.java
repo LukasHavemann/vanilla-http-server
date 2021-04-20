@@ -135,7 +135,7 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
                     httpRequest.getHttpMethod(),
                     httpRequest.getUri(),
                     httpRequest.getHeader(),
-                    httpResponse.getStatusCode());
+                    httpResponse.getStatusCode().getRepresentation());
         }
 
         private boolean handleRequest(HttpRequest request, HttpResponse.Builder responseBuilder) throws Exception {

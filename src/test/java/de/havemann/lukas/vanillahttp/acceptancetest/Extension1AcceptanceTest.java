@@ -16,6 +16,11 @@ import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Testing the fulfilment of the following requirements:
+ * <p>
+ * Add proper handling of HTTP ETag, If-Match, If-None-Match, If-Modified-Since headers.
+ */
 @SpringBootTest(classes = VanillaHttpServer.class)
 @TestPropertySource(properties = {
         "vanilla.server.port=9998",

@@ -40,7 +40,9 @@ public class ConnectionAcceptorService {
 
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        bindAcceptingSocket();
+        if (!bindAcceptingSocket()) {
+            return;
+        }
 
         LOG.info("start excepting client connections");
 
@@ -50,13 +52,15 @@ public class ConnectionAcceptorService {
         acceptorThread.start();
     }
 
-    private void bindAcceptingSocket() {
+    private boolean bindAcceptingSocket() {
         try {
             acceptingSocket = new ServerSocket(port, backlog, InetAddress.getByName(host));
             acceptingSocket.setSoTimeout((int) ACCEPTOR_THREAD_TIMEOUT.toMillis());
             LOG.info("started vanilla http server on {} and port {}", host, port);
+            return true;
         } catch (IOException e) {
             LOG.error("could not open socket on {} and port {}", host, port, e);
+            return false;
         }
     }
 
