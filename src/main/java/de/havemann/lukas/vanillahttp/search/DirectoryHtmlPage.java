@@ -9,6 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+/**
+ * Simple class to render a html page which list all the files and subdirectories of a supplied directory in a
+ * unstructured list.
+ */
 public class DirectoryHtmlPage {
 
     public static final String START_PAGE = String.join("\n",

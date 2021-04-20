@@ -3,7 +3,7 @@ package de.havemann.lukas.vanillahttp.dispatcher;
 import java.net.Socket;
 
 /**
- * Receives and processes new established client sockets and processes them.
+ * Receives new established client sockets and processes them.
  */
 @SuppressWarnings("UnusedReturnValue")
 public interface ClientSocketDispatcher {

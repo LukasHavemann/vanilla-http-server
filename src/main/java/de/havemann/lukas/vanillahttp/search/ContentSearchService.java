@@ -16,7 +16,7 @@ public interface ContentSearchService {
     /**
      * Searches for a resource identified by the supplied uri
      *
-     * @param uri identifying the searched resource
+     * @param uri identifying the syearched resource
      * @return result object with search result
      */
     Response fetch(String uri);
@@ -55,6 +55,7 @@ public interface ContentSearchService {
         PERMISSION_DENIED(HttpStatusCode.FORBIDDEN),
         ERROR(HttpStatusCode.INTERNAL_SERVER_ERROR);
 
+        // we are running inside a http server so http technology dependent elements in the api are okay.
         private final HttpStatusCode defaultHttpCode;
 
         Result(HttpStatusCode defaultHttpCode) {

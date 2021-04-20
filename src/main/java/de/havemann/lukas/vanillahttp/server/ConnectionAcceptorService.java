@@ -17,6 +17,9 @@ import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Starts the Thread which accepts new client connections. New client sockets are passed to {@link ClientSocketDispatcher}.
+ */
 @Service
 public class ConnectionAcceptorService {
 
@@ -38,6 +41,7 @@ public class ConnectionAcceptorService {
         this.clientSocketDispatcher = clientSocketDispatcher;
     }
 
+    @SuppressWarnings("unused")
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (!bindAcceptingSocket()) {
@@ -81,6 +85,7 @@ public class ConnectionAcceptorService {
         state.set(AcceptorThreadState.STOPPED);
     }
 
+    @SuppressWarnings("unused")
     @EventListener
     public void shutdown(ContextClosedEvent stoppedEvent) throws InterruptedException {
         if (!state.compareAndSet(AcceptorThreadState.RUNNING, AcceptorThreadState.STOPPING)) {
