@@ -12,7 +12,6 @@ public interface ClientSocketDispatcher {
      * process new established client socket
      *
      * @param clientSocket new established client socket
-     * @return true, if dispatching was successful
      */
-    boolean dispatch(Socket clientSocket);
+    void dispatch(Socket clientSocket);
 }

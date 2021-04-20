@@ -40,8 +40,8 @@ docker run -d \
 The vanilla-http-server uses spring boot starter for dependency injection and configuration management. The web context
 of spring boot **[is disabled](src/main/java/de/havemann/lukas/vanillahttp/VanillaHttpServer.java)**.
 The [http protocol](src/main/java/de/havemann/lukas/vanillahttp/protocol)
-implementation was built from scratch. The html testing framework [jsoup](https://jsoup.org) is used for automated acceptance
-testing.
+implementation was built from scratch. The html testing framework [jsoup](https://jsoup.org) is used for automated
+acceptance testing.
 
 ## :house: Architecture
 
@@ -53,21 +53,21 @@ the following sequence diagram.
 ### Description
 
 The [`ConnectionAcceptorService`](src/main/java/de/havemann/lukas/vanillahttp/server/ConnectionAcceptorService.java)
-accepts new tcp connections. After successful initialization of the client socket, the socket is passed to
+accepts new tcp connections. After the successful initialization of the client socket, the socket is passed to
 a [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java), which
-is responsible for handling the client socket. With
+is responsible for handling the client socket. The
 [`UnlimitedThreadDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
-there is only one simple implementation of
+class is the only implementation of
 the [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java)
 interface at the moment.
 
 The [`UnlimitedThreadDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
-spawns a new `ClientConnectionHandlerThread` which is responsible for handling the client socket and managing the http
-keep-alive feature. The `ClientConnectionHandlerThread`passes successfully
+works pretty simple and spawns a new `ClientConnectionHandlerThread` which is responsible for handling the client socket
+and managing the http keep-alive feature. The `ClientConnectionHandlerThread`passes successfully
 parsed [`HttpRequest`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequest.java) to an instance
 of [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java).
 
-With [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
+The [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
 there is only on implementation of said interface.
 The [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
 does handle the eTag evaluation and uses
@@ -106,8 +106,9 @@ acceptance tests. The capability to stream large files was manually tested.
 
 To validate that the vanilla-http-server can serve multiple concurrent request, a simple [Gatling](https://gatling.io/)
 load test
-scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala). The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with the
-result of the load test can be found under ```target/gatling/simple*/index.html```.
+scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala)
+. The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with
+the result of the load test can be found under ```target/gatling/simple*/index.html```.
 
 On a Macbook Air M1, 2020, 16GB, macOS big sur 11.2 the following load test result could be achieved. The
 vanilla-http-server was able to serve _3000 req/sec_ with a 99th percentile of _13ms_. On higher request rates requests
@@ -117,7 +118,8 @@ further tuning and testing was done.
 In the following histogram you can see the distribution of the response-time percentiles. During the ramp-up phase, the
 vanilla-http-server spawns a lot of new client connection handling threads. The spawning leads to response percentile
 spikes, which could be prevented by a more
-intelligent  [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java) .
+intelligent  [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java)
+.
 
 ![Distribution of response times](doc/histograms.png)
 
