@@ -52,11 +52,10 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
         this.beanFactory = Objects.requireNonNull(beanFactory);
     }
 
-    public boolean dispatch(Socket clientSocket) {
+    public void dispatch(Socket clientSocket) {
         final ClientConnectionHandlerThread clientConnectionHandlerThread = new ClientConnectionHandlerThread(clientSocket);
         clientConnectionHandlerThread.setDaemon(true);
         clientConnectionHandlerThread.start();
-        return true;
     }
 
     public class ClientConnectionHandlerThread extends Thread {
