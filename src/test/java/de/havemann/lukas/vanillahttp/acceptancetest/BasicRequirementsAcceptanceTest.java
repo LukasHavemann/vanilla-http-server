@@ -45,7 +45,7 @@ class BasicRequirementsAcceptanceTest {
         assertThat(document.select("li").stream().map(Element::text).collect(Collectors.toList()))
                 .hasSize(4)
                 .contains("dirwithhtml/")
-                .startsWith("subdirectory/");
+                .contains("subdirectory/");
     }
 
     /**
