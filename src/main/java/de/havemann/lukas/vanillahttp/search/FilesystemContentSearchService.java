@@ -23,6 +23,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Searches for content in the filesystem by converting the supplied URI into a filesystem url. Files are searched in a
+ * configurable base directory. Supplied URIs are checked, that no filed outside of the configured basedir can be accessed.
+ * If a directory is requested, {@link FilesystemContentSearchService} generates with {@link DirectoryHtmlPage} a html
+ * page containing all files and sub directories of the requested directory.
+ */
 @Service
 class FilesystemContentSearchService implements ContentSearchService {
 
@@ -112,6 +118,9 @@ class FilesystemContentSearchService implements ContentSearchService {
         }
     }
 
+    /**
+     * Representing a search response for a found file in the base directory.
+     */
     class FileSystemResponse implements Response {
         private final Result result;
         private final File file;
@@ -203,6 +212,9 @@ class FilesystemContentSearchService implements ContentSearchService {
         }
     }
 
+    /**
+     * Representing generated responses like the {@link DirectoryHtmlPage} or error search responses.
+     */
     static class InMemoryResponse implements Response {
 
         private final Result result;

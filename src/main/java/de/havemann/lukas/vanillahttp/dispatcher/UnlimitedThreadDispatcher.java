@@ -31,6 +31,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Spawns for every new client connection a separate thread
+ */
 @Service
 public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
 
@@ -58,6 +61,9 @@ public class UnlimitedThreadDispatcher implements ClientSocketDispatcher {
         clientConnectionHandlerThread.start();
     }
 
+    /**
+     * Thread responsible for handling a client connection
+     */
     public class ClientConnectionHandlerThread extends Thread {
 
         private final Socket clientSocket;

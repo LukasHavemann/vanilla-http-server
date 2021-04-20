@@ -21,6 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+/**
+ * Contains the main business logic of the vanilla-http-server. Binds together all the different components by excepting
+ * {@link HttpRequest}, calling the provided {@link ContentSearchService} instance to find the request resource,
+ * evaluating the content search result and generating the HTTP response.
+ */
 @Component
 @Scope("prototype")
 public class SearchServiceRequestProcessor implements ClientRequestProcessor {
