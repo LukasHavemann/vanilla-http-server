@@ -60,7 +60,7 @@ class Extension2AcceptanceTest {
     void connectionClosesAfterClientTimeout() throws IOException, InterruptedException {
         assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
         TimeUnit.SECONDS.sleep(1);
-        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
+        assertThat(client.readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
     }
 
     @Test
