@@ -7,6 +7,9 @@ import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 
 import scala.concurrent.duration.DurationInt
 
+/**
+ * Simple simulation to load a file from vanilla-http-server without caching of file due to ETag
+ */
 //noinspection TypeAnnotation
 class SimpleVanillaRequestSimulation extends Simulation {
 
@@ -22,7 +25,7 @@ class SimpleVanillaRequestSimulation extends Simulation {
 
   setUp(
     textFileRequest.inject(
-      rampUsers(20).during(15.seconds),
-      constantUsersPerSec(100).during(30.seconds))
+      rampUsersPerSec(10).to(2000).during(10.seconds),
+      constantUsersPerSec(3000).during(30.seconds))
       .protocols(httpProtocol))
 }

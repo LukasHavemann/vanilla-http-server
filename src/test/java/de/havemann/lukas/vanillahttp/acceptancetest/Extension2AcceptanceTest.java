@@ -60,7 +60,7 @@ class Extension2AcceptanceTest {
     void connectionClosesAfterClientTimeout() throws IOException, InterruptedException {
         assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.OK.getRepresentation());
         TimeUnit.SECONDS.sleep(1);
-        assertThat(client.readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
+        assertThat(client.sendHeadRequest().readResponse()).contains(HttpStatusCode.REQUEST_TIMEOUT.getRepresentation());
     }
 
     @Test
@@ -77,12 +77,26 @@ class Extension2AcceptanceTest {
         }
     }
 
+    @Test
+    void respectsClientConnectionCloseHeader() throws IOException {
+        final String response = client.header("Connection", "close")
+                .send("HEAD / HTTP/1.1")
+                .readResponse();
+
+        assertThat(response).contains(HttpStatusCode.OK.getRepresentation());
+        try {
+            assertThat(client.send("HEAD / HTTP/1.0").readResponse()).isEqualTo("");
+        } catch (SocketException ignored) {
+        }
+    }
+
     static class SimpleHttpTestClient {
 
         private final int port;
         private Socket clientSocket;
         private DataOutputStream dataOutputStream;
         private BufferedReader reader;
+        private String headerValue = "";
 
         public SimpleHttpTestClient(int port) {
             this.port = port;
@@ -104,7 +118,11 @@ class Extension2AcceptanceTest {
 
         public SimpleHttpTestClient send(String string) throws IOException {
             initSocket();
-            dataOutputStream.write((string + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            dataOutputStream.write((string + "\r\n").getBytes(StandardCharsets.UTF_8));
+            if (!headerValue.isEmpty()) {
+                dataOutputStream.write(headerValue.getBytes(StandardCharsets.UTF_8));
+            }
+            dataOutputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
             dataOutputStream.flush();
             return this;
         }
@@ -120,6 +138,11 @@ class Extension2AcceptanceTest {
 
         public void close() throws IOException {
             clientSocket.close();
+        }
+
+        public SimpleHttpTestClient header(String key, String value) {
+            this.headerValue += (key + ": " + value + "\r\n");
+            return this;
         }
     }
 }

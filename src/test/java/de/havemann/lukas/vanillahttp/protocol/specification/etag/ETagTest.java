@@ -38,24 +38,24 @@ class ETagTest {
      * +--------+--------+-------------------+-----------------+
      */
     @Test
-    void eTagComparsionStrategyTest() {
-        final ETag eWeak1 = new ETag("1", ETag.Kind.WEAK);
-        final ETag eWeak2 = new ETag("2", ETag.Kind.WEAK);
-        final ETag eStro1 = new ETag("1", ETag.Kind.STRONG);
+    void eTagComparisonStrategyTest() {
+        final ETag eWea1 = new ETag("1", ETag.Kind.WEAK);
+        final ETag eWea2 = new ETag("2", ETag.Kind.WEAK);
+        final ETag eStr1 = new ETag("1", ETag.Kind.STRONG);
 
         final SoftAssertions softlyStrong = new SoftAssertions();
-        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWeak1, eWeak1)).isFalse();
-        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWeak1, eWeak2)).isFalse();
-        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWeak1, eStro1)).isFalse();
-        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eStro1, eStro1)).isTrue();
+        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWea1, eWea1)).isFalse();
+        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWea1, eWea2)).isFalse();
+        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eWea1, eStr1)).isFalse();
+        softlyStrong.assertThat(ETag.Kind.STRONG.compare(eStr1, eStr1)).isTrue();
         softlyStrong.assertAll();
 
 
         final SoftAssertions softlyWeak = new SoftAssertions();
-        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWeak1, eWeak1)).isTrue();
-        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWeak1, eWeak2)).isFalse();
-        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWeak1, eStro1)).isTrue();
-        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eStro1, eStro1)).isTrue();
+        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWea1, eWea1)).isTrue();
+        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWea1, eWea2)).isFalse();
+        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eWea1, eStr1)).isTrue();
+        softlyWeak.assertThat(ETag.Kind.WEAK.compare(eStr1, eStr1)).isTrue();
         softlyWeak.assertAll();
     }
 }

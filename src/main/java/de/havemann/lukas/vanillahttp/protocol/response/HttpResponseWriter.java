@@ -76,20 +76,8 @@ public class HttpResponseWriter implements Closeable {
     }
 
     private void renderBody(HttpProtocol protocol, Callable<InputStream> inputStreamSupplier) throws Exception {
-        InputStream inputStream = null;
-        try {
-            inputStream = inputStreamSupplier.call();
+        try (InputStream inputStream = inputStreamSupplier.call()) {
             selectByProtocol(protocol, inputStream);
-        } catch (Exception outerEx) {
-            try {
-                // opened inputStream to filesystem so we are responsible for closing it again
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (Exception innerEx) {
-                outerEx.addSuppressed(innerEx);
-            }
-            throw outerEx;
         }
     }
 

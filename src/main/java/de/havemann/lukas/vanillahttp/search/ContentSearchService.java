@@ -33,7 +33,7 @@ public interface ContentSearchService {
         /**
          * Opens stream to found resource
          */
-        Optional<InputStream> getInputStream() throws IOException;
+        Optional<InputStream> getInputStream();
 
         /**
          * Return Hash-Value of found resource. Call to method may lead to load of resource into memory depending on

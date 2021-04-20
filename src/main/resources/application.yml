@@ -4,11 +4,11 @@ vanilla:
     backlog: 50
     host: localhost
     filesystem:
-      maxInMemory: 30KB
+      maxInMemory: 50MB
       basedir: "./src/test/resources/sampledirectory"
     http:
       keepAliveTimeout: 10s
-      chunkedEncodingBufferSize: 255B
+      chunkedEncodingBufferSize: 10KB
 
 logging:
   level:

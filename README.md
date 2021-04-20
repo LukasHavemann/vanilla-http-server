@@ -93,23 +93,23 @@ In summary the architecture of the vanilla-http-server foresees the following po
 - A different  [`ContentSearchService`](src/main/java/de/havemann/lukas/vanillahttp/search/ContentSearchService.java)
   could be implemented, to search for resources in a database or s3 service etc.
 
-## :test_tube: Unittests & Acceptancetest
+## :test_tube: Unit Tests & Acceptance Test
 
 Critical classes are tested with JUnit, Mockito and AssertJ. All requirements are validated end-to-end with automated
 acceptance tests. The capability to stream large files was manually tested.
 
-* [Basic Reguirements Acceptancetest](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/BasicRequirementsAcceptanceTest.java)
-* [Extension 1 Acceptancetest](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/Extension1AcceptanceTest.java)
-* [Extension 2 Acceptancetest](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/Extension2AcceptanceTest.java)
+* [Basic Requirements Acceptance Test](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/BasicRequirementsAcceptanceTest.java)
+* [Extension 1 Acceptance Test](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/Extension1AcceptanceTest.java)
+* [Extension 2 Acceptance Test](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/Extension2AcceptanceTest.java)
 
-## :gun: Loadtesting
+## :gun: Load Testing
 
 To validate that the vanilla-http-server can serve multiple concurrent request, a simple [Gatling](https://gatling.io/)
-loadtest
-scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala). The loadtest driver can be started with ```mvn gatling:test```. When the loadtest has completed a html report with the
-result of the loadtest can be found under ```target/gatling/simple*/index.html```.
+load test
+scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala). The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with the
+result of the load test can be found under ```target/gatling/simple*/index.html```.
 
-On a Macbook Air M1, 2020, 16GB, macOS big sur 11.2 the following loadtest result could be achieved. The
+On a Macbook Air M1, 2020, 16GB, macOS big sur 11.2 the following load test result could be achieved. The
 vanilla-http-server was able to serve _3000 req/sec_ with a 99th percentile of _13ms_. On higher request rates requests
 started to fail due to many open files. There seams to be no resource leak, and the response times were good, so no
 further tuning and testing was done.
