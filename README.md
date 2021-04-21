@@ -61,14 +61,16 @@ class is the only implementation of
 the [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java)
 interface at the moment.
 The [`UnlimitedThreadDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
-works pretty simple and spawns a new `ClientConnectionHandlerThread` which is responsible for handling the client socket
-and managing the http keep-alive feature.
+works pretty simple and spawns a
+new [`ClientConnectionHandlerThread`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
+which is responsible for handling the client socket and managing the http keep-alive feature.
 
 ### Client HTTP Request Handling
 
 ![Architecture overview of the client res](doc/clientRequestProcessor.png)
 
-The `ClientConnectionHandlerThread`passes successfully
+The [`ClientConnectionHandlerThread`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
+passes successfully
 parsed [`HttpRequest`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequest.java) to an instance
 of [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java).
 The [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
@@ -89,9 +91,9 @@ the moment.
 
 ![Implemenatation of HTTP Protocol Parsing](doc/clientConnectionThread.png)
 
-The [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java)
-encapsulates the whole http protocol parsing and response
-generation. [`HttpRequestBuffer`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestBuffer.java)
+The [`ClientConnectionHandlerThread`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
+encapsulates the whole http protocol parsing and response generation
+process. [`HttpRequestBuffer`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestBuffer.java)
 is a stateful class which determines the end of a http request and
 calls [`HttpRequestParser`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestParser.java) to
 parse the received http
@@ -132,7 +134,8 @@ files was manually tested.
 
 To validate that the vanilla-http-server can serve multiple concurrent request, a simple [Gatling](https://gatling.io/)
 load test
-scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala). The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with
+scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala)
+. The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with
 the result of the load test can be found under ```target/gatling/simple*/index.html```.
 
 On a Macbook Air M1, 2020, 16GB, macOS big sur 11.2 the following load test result could be achieved. The
