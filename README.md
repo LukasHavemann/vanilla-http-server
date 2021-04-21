@@ -45,12 +45,12 @@ acceptance testing.
 
 ## :house: Architecture
 
-The vanilla-http-server uses a simple blocking execution model. The main components and their interaction, are shown in
-the following sequence diagram.
+The vanilla-http-server uses a simple blocking execution model. The main components and their interaction with each
+other is shown in the following sequence diagrams.
 
-![Architecture overview](doc/main-components.png)
+### Client Connection Handling
 
-### Description
+![Architecture overview of the client socket handling part](doc/clientConnectionAcceptingPart.png)
 
 The [`ConnectionAcceptorService`](src/main/java/de/havemann/lukas/vanillahttp/server/ConnectionAcceptorService.java)
 accepts new tcp connections. After the successful initialization of the client socket, the socket is passed to
@@ -60,23 +60,47 @@ is responsible for handling the client socket. The
 class is the only implementation of
 the [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientSocketDispatcher.java)
 interface at the moment.
-
 The [`UnlimitedThreadDispatcher`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/UnlimitedThreadDispatcher.java)
 works pretty simple and spawns a new `ClientConnectionHandlerThread` which is responsible for handling the client socket
-and managing the http keep-alive feature. The `ClientConnectionHandlerThread`passes successfully
+and managing the http keep-alive feature.
+
+### Client HTTP Request Handling
+
+![Architecture overview of the client res](doc/clientRequestProcessor.png)
+
+The `ClientConnectionHandlerThread`passes successfully
 parsed [`HttpRequest`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequest.java) to an instance
 of [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java).
-
 The [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
-there is only on implementation of said interface.
+is the only implementation of said interface.
 The [`SearchServiceRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/search/SearchServiceRequestProcessor.java)
 does handle the eTag evaluation and uses
 the [`ContentSearchService`](src/main/java/de/havemann/lukas/vanillahttp/search/ContentSearchService.java) instance to
-find the requested
-resource. [`FilesystemContentSearchService`](src/main/java/de/havemann/lukas/vanillahttp/search/FilesystemContentSearchService.java)
+find the requested resource. After receiving the search result `SearchServiceRequestProcessor` generates a
+[`Http Response`](src/main/java/de/havemann/lukas/vanillahttp/protocol/response/HttpResponse.java) and returns so
+that [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java) can
+send the http response.
+[`FilesystemContentSearchService`](src/main/java/de/havemann/lukas/vanillahttp/search/FilesystemContentSearchService.java)
 is the only implementation of
 the [`ContentSearchService`](src/main/java/de/havemann/lukas/vanillahttp/search/ContentSearchService.java) interface at
 the moment.
+
+### HTTP Protocol Implementation
+
+![Implemenatation of HTTP Protocol Parsing](doc/clientConnectionThread.png)
+
+The [`ClientRequestProcessor`](src/main/java/de/havemann/lukas/vanillahttp/dispatcher/ClientRequestProcessor.java)
+encapsulates the whole http protocol parsing and response
+generation. [`HttpRequestBuffer`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestBuffer.java)
+is a stateful class which determines the end of a http request and
+calls [`HttpRequestParser`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestParser.java) to
+parse the received http
+data. [`HttpRequestParser`](src/main/java/de/havemann/lukas/vanillahttp/protocol/request/HttpRequestParser.java)
+is a recursive descent style like parser, which is capable of providing context-aware parsing
+errors. [`HttpResponseWriter`](src/main/java/de/havemann/lukas/vanillahttp/protocol/response/HttpResponseWriter.java)
+encapsulates the outputStream to the requesting
+client. [`HttpResponseWriter`](src/main/java/de/havemann/lukas/vanillahttp/protocol/response/HttpResponseWriter.java)
+does manage the conversion and transportation of data from a inputstream to chunked encoded data to a outputstream.
 
 ### Summary
 
@@ -95,8 +119,10 @@ In summary the architecture of the vanilla-http-server foresees the following po
 
 ## :test_tube: Unit Tests & Acceptance Test
 
-Critical classes are tested with JUnit, Mockito and AssertJ. All requirements are validated end-to-end with automated
-acceptance tests. The capability to stream large files was manually tested.
+Critical classes are tested with JUnit 5, [Mockito](https://site.mockito.org)
+and [AssertJ](https://assertj.github.io/doc/). All requirements are validated end-to-end with automated acceptance
+tests. For the acceptance testing the html framework [jsoup](https://jsoup.org) was used. The capability to stream large
+files was manually tested.
 
 * [Basic Requirements Acceptance Test](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/BasicRequirementsAcceptanceTest.java)
 * [Extension 1 Acceptance Test](src/test/java/de/havemann/lukas/vanillahttp/acceptancetest/Extension1AcceptanceTest.java)
@@ -106,8 +132,7 @@ acceptance tests. The capability to stream large files was manually tested.
 
 To validate that the vanilla-http-server can serve multiple concurrent request, a simple [Gatling](https://gatling.io/)
 load test
-scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala)
-. The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with
+scenario [is included in the project](src/test/scala/de/havemann/lukas/vanillahttp/SimpleVanillaRequestSimulation.scala). The load test driver can be started with ```mvn gatling:test```. When the load test has completed a html report with
 the result of the load test can be found under ```target/gatling/simple*/index.html```.
 
 On a Macbook Air M1, 2020, 16GB, macOS big sur 11.2 the following load test result could be achieved. The
@@ -127,15 +152,15 @@ intelligent  [`ClientSocketDispatcher`](src/main/java/de/havemann/lukas/vanillah
 
 For local analyzing and debugging of the http protocol implementation [Wireshark](https://www.wireshark.org/) was used.
 
-The execution of the unit and acceptance tests were automated
+The execution of unit and acceptance tests were automated
 with [GitHub Actions](https://github.com/LukasHavemann/vanilla-http-server/actions). The docker image build is automated
 with [DockerHub](https://hub.docker.com/repository/docker/lukashavemann/vanilla-http-server). As soon as a new merge to
 master happens, a new docker image is built by DockerHub cloud and provided with latest tag in
 the [DockerHub registry](https://hub.docker.com/repository/docker/lukashavemann/vanilla-http-server).
 
-The docker image is built as a multi-stage build. The maven build process produces
+The docker image is built in a multi-stage docker build. The maven build process produces
 a [layered jar](https://docs.spring.io/spring-boot/docs/current/maven-plugin/reference/htmlsingle/#repackage-layers).
-During build process the layered jar gets unpacked and added as separate layers, to make use of the docker layer
+During the build process the layered jar gets unpacked and added as separate layers, to make use of the docker layer
 deduplication feature to reduce server startup time.
 
 ## :book: Used Online Resources
