@@ -10,61 +10,63 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Simple class to render a html page which list all the files and subdirectories of a supplied directory in a
- * unstructured list.
+ * Simple class to render a html page which list all the files and subdirectories of a supplied
+ * directory in a unstructured list.
  */
 public class DirectoryHtmlPage {
 
-    public static final String START_PAGE = String.join("\n",
-            "<!DOCTYPE html PUBLIC \" -//W3C//DTD HTML 3.2 Final//EN\"><html>",
-            "<title>Directory listing for #directoryPath</title>",
-            "<body>",
-            "<h2>Directory listing for #directoryPath</h2>",
-            "<hr>",
-            "<ul>");
+  public static final String START_PAGE = String.join("\n",
+      "<!DOCTYPE html PUBLIC \" -//W3C//DTD HTML 3.2 Final//EN\"><html>",
+      "<title>Directory listing for #directoryPath</title>",
+      "<body>",
+      "<h2>Directory listing for #directoryPath</h2>",
+      "<hr>",
+      "<ul>");
 
-    public static final String END_PAGE = String.join("\n",
-            "</ul>",
-            "<hr>",
-            "</body>",
-            "</html>");
+  public static final String END_PAGE = String.join("\n",
+      "</ul>",
+      "<hr>",
+      "</body>",
+      "</html>");
 
 
-    private final String directoryName;
-    private final OutputStream outputStream;
-    private final File directory;
+  private final String directoryName;
+  private final OutputStream outputStream;
+  private final File directory;
 
-    public DirectoryHtmlPage(String directoryName, File directory, OutputStream outputStream) {
-        this.directoryName = Objects.requireNonNull(directoryName);
-        this.directory = Objects.requireNonNull(directory);
-        this.outputStream = Objects.requireNonNull(outputStream);
-    }
+  public DirectoryHtmlPage(String directoryName, File directory, OutputStream outputStream) {
+    this.directoryName = Objects.requireNonNull(directoryName);
+    this.directory = Objects.requireNonNull(directory);
+    this.outputStream = Objects.requireNonNull(outputStream);
+  }
 
-    public void render() throws IOException {
-        outputStream.write(START_PAGE.replaceAll("#directoryPath", directoryName).getBytes(StandardCharsets.UTF_8));
-        renderFiles();
-        outputStream.write(END_PAGE.getBytes(StandardCharsets.UTF_8));
-    }
+  public void render() throws IOException {
+    outputStream.write(
+        START_PAGE.replaceAll("#directoryPath", directoryName).getBytes(StandardCharsets.UTF_8));
+    renderFiles();
+    outputStream.write(END_PAGE.getBytes(StandardCharsets.UTF_8));
+  }
 
-    private void renderFiles() throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath())) {
-            for (Path path : stream) {
-                if (path.toFile().canRead()) {
-                    outputStream.write(renderListElement(getFilename(path)));
-                }
-            }
+  private void renderFiles() throws IOException {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath())) {
+      for (Path path : stream) {
+        if (path.toFile().canRead()) {
+          outputStream.write(renderListElement(getFilename(path)));
         }
+      }
+    }
+  }
+
+  private String getFilename(Path path) {
+    if (Files.isDirectory(path)) {
+      return path.getFileName().toString() + "/";
     }
 
-    private String getFilename(Path path) {
-        if (Files.isDirectory(path)) {
-            return path.getFileName().toString() + "/";
-        }
+    return path.getFileName().toString();
+  }
 
-        return path.getFileName().toString();
-    }
-
-    private byte[] renderListElement(String file) {
-        return "<li><a href=\"#file\">#file</a>\n".replaceAll("#file", file).getBytes(StandardCharsets.UTF_8);
-    }
+  private byte[] renderListElement(String file) {
+    return "<li><a href=\"#file\">#file</a>\n".replaceAll("#file", file)
+        .getBytes(StandardCharsets.UTF_8);
+  }
 }

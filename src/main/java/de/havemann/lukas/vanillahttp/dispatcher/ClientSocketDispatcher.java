@@ -8,10 +8,10 @@ import java.net.Socket;
 @SuppressWarnings("UnusedReturnValue")
 public interface ClientSocketDispatcher {
 
-    /**
-     * process new established client socket
-     *
-     * @param clientSocket new established client socket
-     */
-    void dispatch(Socket clientSocket);
+  /**
+   * process new established client socket
+   *
+   * @param clientSocket new established client socket
+   */
+  void dispatch(Socket clientSocket);
 }
