@@ -147,10 +147,10 @@
       <artifactId>jsoup</artifactId>
       <groupId>org.jsoup</groupId>
       <scope>test</scope>
-      <version>1.13.1</version>
+      <version>1.14.2</version>
     </dependency>
   </dependencies>
-  <description>simple but function http server implementation</description>
+  <description>simple but functional http server implementation</description>
 
   <groupId>org.example</groupId>
   <modelVersion>4.0.0</modelVersion>
