@@ -147,7 +147,7 @@
       <artifactId>jsoup</artifactId>
       <groupId>org.jsoup</groupId>
       <scope>test</scope>
-      <version>1.14.2</version>
+      <version>1.15.3</version>
     </dependency>
   </dependencies>
   <description>simple but functional http server implementation</description>
